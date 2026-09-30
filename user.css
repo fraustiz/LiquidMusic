@@ -958,49 +958,29 @@ html[data-lm-page="home"] .main-view-container__scroll-node-child > main > div >
 	visibility: hidden !important;
 }
 
-/* Scroll-edge effect: once the panel scrolls, its content fades out under the header instead of being cut */
+/* Scroll-edge effect (iOS 26): once the panel scrolls, its content fades out before it reaches the header, so
+   the title floats over the glass with no bar behind it. A bar can't be glass here: the panel already is, and a
+   nested backdrop-filter only sees the panel, never the page, so it rendered as a dark rectangle */
 @property --lm-scroll-edge { syntax: "<length>"; inherits: false; initial-value: 0px; }
 @keyframes lm-scroll-edge {
 	to {
-		--lm-scroll-edge: 24px;
+		--lm-scroll-edge: 104px;
 	}
 }
 .main-nowPlayingView-mainContainer > [data-overlayscrollbars-viewport] {
-	mask-image: linear-gradient(to bottom, transparent, #000 var(--lm-scroll-edge));
+	mask-image: linear-gradient(to bottom, transparent calc(var(--lm-scroll-edge) * 0.6), #000 var(--lm-scroll-edge));
 	animation: lm-scroll-edge linear both;
 	animation-timeline: scroll(self);
-	animation-range: 0 40px;
-	scroll-timeline: --lm-npv-scroll block;
+	animation-range: 0 60px;
 }
-/* Header bar (context name): once scrolled, Spotify fills it with the opaque base colour and a heavy shadow.
-   It takes the panel's glass instead, fading in over the first 40px of scroll, with a hairline edge */
-.NowPlayingView {
-	timeline-scope: --lm-npv-scroll;
-}
-@keyframes lm-npv-bar {
-	from {
-		background-color: transparent;
-		box-shadow: 0 1px 0 transparent;
-		backdrop-filter: blur(0) saturate(100%);
-	}
-	to {
-		background-color: var(--lm-glass-thick-bg);
-		box-shadow: 0 1px 0 var(--lm-separator);
-		backdrop-filter: blur(20px) saturate(180%);
-	}
-}
+/* Spotify's scrolled header (opaque base colour, and a heavy shadow on the bar and on its container, which drew a
+   hard line under the title) stays off */
 .main-nowPlayingView-headerWrapper {
-	/* When the panel can't scroll, the scroll timeline is inactive and Spotify's own "scrolled" style shows,
-	   sometimes stale (after leaving full screen): an opaque band above the artwork. Nothing can scroll under
-	   the bar then, so it stays clear */
 	--background-base: transparent;
-	animation: lm-npv-bar linear both;
-	animation-timeline: --lm-npv-scroll;
-	animation-range: 0 40px;
-	transition: none !important;
 }
-.NowPlayingView .main-nowPlayingView-headerContainer > .main-nowPlayingView-headerWrapper {
-	box-shadow: none;
+.main-nowPlayingView-headerContainer,
+.main-nowPlayingView-headerWrapper {
+	box-shadow: none !important;
 }
 /* Spotify fades the track info into an opaque background over 280px (meant for Canvas videos), which ends in a
    hard edge over the glass */
