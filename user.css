@@ -1,0 +1,1212 @@
+/* =============================================================================
+   LiquidMusic — Spicetify theme inspired by iOS 27 & Apple Music
+   Design: docs/2026-09-29-liquidmusic-design.md
+   1 Tokens · 2 Typography · 3 Materials & backdrop · 4 Layout (fragile)
+   5 Player pill (fragile) · 6 Components · 7 Menus & overlays · 8 Pages
+   9 Motion · 10 Accessibility
+   ========================================================================== */
+
+/* 1 · Tokens ---------------------------------------------------------------- */
+
+/* Registered so they can transition (accent follows the artwork, surfaces follow the mode) */
+@property --lm-accent { syntax: "<color>"; inherits: true; initial-value: #fa2d48; }
+@property --spice-button { syntax: "<color>"; inherits: true; initial-value: #fa2d48; }
+@property --spice-button-active { syntax: "<color>"; inherits: true; initial-value: #fa2d48; }
+@property --lm-bg-window { syntax: "<color>"; inherits: true; initial-value: #000; }
+@property --lm-bg-content { syntax: "<color>"; inherits: true; initial-value: #161618; }
+@property --lm-label { syntax: "<color>"; inherits: true; initial-value: #fff; }
+@property --lm-glass-thick-bg { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --lm-glass-regular-bg { syntax: "<color>"; inherits: true; initial-value: transparent; }
+
+:root {
+	--lm-accent: #fa2d48;
+	--lm-on-accent: #fff;
+
+	/* Inter (variable: weight + optical size) is loaded from Google Fonts by theme.js — never @import it here:
+	   delaying this stylesheet made Spicetify's own startup race crash Spotify ("Something went wrong").
+	   Offline: SF Pro if installed, then the system UI font. */
+	--lm-font: "Inter", "SF Pro", "SF Pro Text", "Segoe UI Variable", system-ui, sans-serif;
+	--lm-font-rounded: var(--lm-font);
+
+	--lm-gap: 10px;
+	--lm-toolbar-h: 52px;
+	--lm-pill-h: 76px;
+	--lm-edge-w: 0.5px;
+	--lm-radius-panel: 20px;
+	--lm-radius-art: 8px;
+	--lm-radius-art-sm: 6px;
+	--lm-radius-art-hero: 10px;
+	--lm-radius-menu: 12px;
+	--lm-radius-menu-item: 7px;
+
+	/* Critically damped spring (damping 1.0, response 0.35 s), sampled over 500 ms */
+	--lm-spring: linear(0, 0.0751 5%, 0.2265 10%, 0.3895 15%, 0.5357 20%, 0.6561 25%, 0.75 30%, 0.821 35%, 0.8734 40%, 0.9383 50%, 0.9707 60%, 0.9864 70%, 0.9938 80%, 0.9972 90%, 1);
+	--lm-spring-dur: 500ms;
+}
+
+:root,
+:root[data-lm-theme="dark"] {
+	color-scheme: dark;
+	--lm-bg-window: #000;
+	--lm-bg-content: rgba(22, 22, 24, 0.62);
+	--lm-bg-content-solid: #161618;
+	--lm-label: #fff;
+	--lm-label-2: rgba(235, 235, 245, 0.6);
+	--lm-label-3: rgba(235, 235, 245, 0.3);
+	--lm-separator: rgba(84, 84, 88, 0.6);
+	--lm-fill: rgba(120, 120, 128, 0.18);
+	--lm-fill-2: rgba(120, 120, 128, 0.28);
+	--lm-scrim: rgba(0, 0, 0, 0.45);
+	--lm-glass-thick-bg: rgba(30, 30, 32, 0.55);
+	--lm-glass-regular-bg: rgba(40, 40, 44, 0.5);
+	--lm-glass-thin-bg: rgba(44, 44, 48, 0.82);
+	--lm-glass-edge: rgba(255, 255, 255, 0.08);
+	--lm-glass-highlight: rgba(255, 255, 255, 0.18);
+	--lm-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+	--lm-glass-shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.25);
+	--lm-menu-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+	--lm-art-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+:root[data-lm-theme="light"] {
+	color-scheme: light;
+	--lm-bg-window: #f2f2f7;
+	--lm-bg-content: rgba(255, 255, 255, 0.68);
+	--lm-bg-content-solid: #fff;
+	--lm-label: #000;
+	--lm-label-2: rgba(60, 60, 67, 0.6);
+	--lm-label-3: rgba(60, 60, 67, 0.3);
+	--lm-separator: rgba(60, 60, 67, 0.29);
+	--lm-fill: rgba(120, 120, 128, 0.08);
+	--lm-fill-2: rgba(120, 120, 128, 0.16);
+	--lm-scrim: rgba(255, 255, 255, 0.5);
+	--lm-glass-thick-bg: rgba(250, 250, 252, 0.6);
+	--lm-glass-regular-bg: rgba(255, 255, 255, 0.55);
+	--lm-glass-thin-bg: rgba(252, 252, 254, 0.85);
+	--lm-glass-edge: rgba(0, 0, 0, 0.06);
+	--lm-glass-highlight: rgba(255, 255, 255, 0.8);
+	--lm-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+	--lm-glass-shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.08);
+	--lm-menu-shadow: 0 10px 40px rgba(0, 0, 0, 0.16);
+	--lm-art-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+}
+
+/* Encore (Spotify's design system) tokens → LiquidMusic tokens: one control point for most components */
+:root.encore-dark-theme,
+:root .encore-dark-theme,
+:root .encore-base-set,
+:root .encore-dark-theme .encore-base-set,
+/* Spotify also draws some surfaces (confirmation dialogs, toasts) with its light theme to stand out on the dark
+   UI: they follow the current mode instead */
+:root .encore-light-theme,
+:root .encore-light-theme .encore-base-set {
+	--background-base: var(--lm-bg-content-solid);
+	--background-highlight: var(--lm-fill);
+	--background-press: var(--lm-fill-2);
+	--background-elevated-base: var(--spice-main-elevated);
+	--background-elevated-highlight: var(--spice-highlight-elevated);
+	--background-elevated-press: var(--spice-highlight);
+	--background-tinted-base: var(--lm-fill);
+	--background-tinted-highlight: var(--lm-fill-2);
+	--background-tinted-press: var(--lm-fill-2);
+	--text-base: var(--lm-label);
+	--text-subdued: var(--lm-label-2);
+	--text-bright-accent: var(--lm-accent);
+	--essential-base: var(--lm-label);
+	--essential-subdued: var(--lm-label-3);
+	--essential-bright-accent: var(--lm-accent);
+	--decorative-base: var(--lm-label);
+	--decorative-subdued: var(--lm-separator);
+	--encore-body-font-stack: var(--lm-font);
+	--encore-title-font-stack: var(--lm-font);
+	--encore-variable-font-stack: var(--lm-font);
+}
+
+:root .encore-bright-accent-set,
+:root .encore-dark-theme .encore-bright-accent-set {
+	--background-base: var(--lm-accent);
+	--background-highlight: color-mix(in srgb, var(--lm-accent) 88%, white);
+	--background-press: color-mix(in srgb, var(--lm-accent) 85%, black);
+	--text-base: var(--lm-on-accent);
+	--text-subdued: var(--lm-on-accent);
+	--essential-base: var(--lm-on-accent);
+}
+
+/* 2 · Typography ------------------------------------------------------------ */
+
+body {
+	font-family: var(--lm-font);
+	font-optical-sizing: auto;
+	letter-spacing: -0.006em;
+	-webkit-font-smoothing: antialiased;
+}
+
+/* Apple Music's denser scale: body 14px, secondary 13px (Encore defaults are 16px / 14px) */
+body :is(.encore-text-body-medium, .encore-text-body-medium-bold) {
+	font-size: 14px;
+}
+body :is(.encore-text-body-small, .encore-text-body-small-bold) {
+	font-size: 13px;
+}
+
+body :is(.encore-text-body-small, .encore-text-body-small-bold, .encore-text-marginal, .encore-text-marginal-bold) {
+	letter-spacing: -0.003em;
+}
+
+body :is([class*="encore-text-title"], [class*="encore-text-headline"]) {
+	font-weight: 700;
+	letter-spacing: -0.012em;
+}
+
+/* 3 · Materials & backdrop -------------------------------------------------- */
+
+/* The window colour lives on <html>; <body> stays transparent so #lm-backdrop (z-index -1) shows through */
+html {
+	background: var(--lm-bg-window) !important;
+}
+body {
+	background: transparent !important;
+}
+
+#lm-backdrop {
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	overflow: hidden;
+	pointer-events: none;
+	background: var(--lm-bg-window);
+}
+#lm-backdrop::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: var(--lm-scrim);
+}
+.lm-backdrop-layer {
+	position: absolute;
+	inset: 0;
+	background: center / cover no-repeat;
+	filter: blur(80px) saturate(160%);
+	opacity: 0;
+	transform: scale(1.35);
+	transition:
+		opacity 600ms ease,
+		transform 600ms var(--lm-spring);
+	will-change: opacity, transform;
+}
+.lm-backdrop-layer.is-visible {
+	opacity: 1;
+	transform: scale(1.3);
+}
+
+/* Thick glass — large side panels */
+.Root__nav-bar,
+.Root__right-sidebar-peek {
+	background: var(--lm-glass-thick-bg) !important;
+	backdrop-filter: blur(40px) saturate(180%);
+	box-shadow: inset 0 0 0 var(--lm-edge-w) var(--lm-glass-edge);
+}
+
+/* Regular glass — floating toolbar capsules and the player pill */
+.main-globalNav-historyButtons,
+.main-globalNav-link-icon,
+.main-globalNav-searchInputContainer::before,
+.main-globalNav-contentRight > .main-actionButtons,
+[data-testid="user-widget-link"],
+.main-nowPlayingBar-container {
+	background: var(--lm-glass-regular-bg) !important;
+	backdrop-filter: blur(30px) saturate(180%);
+	box-shadow:
+		inset 0 1px 0 var(--lm-glass-highlight),
+		inset 0 0 0 var(--lm-edge-w) var(--lm-glass-edge),
+		var(--lm-glass-shadow-sm) !important;
+}
+.main-nowPlayingBar-container {
+	box-shadow:
+		inset 0 1px 0 var(--lm-glass-highlight),
+		inset 0 0 0 var(--lm-edge-w) var(--lm-glass-edge),
+		var(--lm-glass-shadow) !important;
+}
+
+/* Thin glass — menus and tooltips (more opaque: they can open over anything, including other glass) */
+#context-menu ul[role="menu"],
+:is([class*="-legacy-tooltip"], [class*="-tooltip "], [class$="-tooltip"]) {
+	background: var(--lm-glass-thin-bg) !important;
+	box-shadow:
+		inset 0 0 0 var(--lm-edge-w) var(--lm-glass-edge),
+		var(--lm-menu-shadow) !important;
+	color: var(--lm-label) !important;
+}
+:is([class*="-legacy-tooltip"], [class*="-tooltip "], [class$="-tooltip"]) {
+	backdrop-filter: blur(20px) saturate(180%);
+}
+/* Submenus ("Add to playlist") render inside the parent menu list, which scrolls: a backdrop-filter or transform
+   on that list would make it their containing block and clip them. The blur goes on the tippy root instead,
+   which is already their containing block (position: absolute, overflow visible). */
+[data-tippy-root]:has(> #context-menu, > ul[role="menu"]) {
+	border-radius: var(--lm-radius-menu);
+	backdrop-filter: blur(20px) saturate(180%);
+}
+/* A nested submenu sits inside its parent's blur, so it cannot blur the page itself: keep it near-opaque
+   (the ID keeps this above the thin-glass rule, which also matches it) */
+#context-menu [data-tippy-root] ul[role="menu"] {
+	background: color-mix(in srgb, var(--spice-main-elevated) 97%, transparent) !important;
+}
+
+/* 4 · Layout — FRAGILE: tied to Spotify's root grid (verified on 1.3.0.277) ---- */
+
+/* Toolbar across the top; library, content and right panel start at the same height underneath.
+   Every Spotify area name is kept so nothing references a missing grid line. */
+.Root__top-container {
+	--panel-gap: var(--lm-gap);
+	grid-template:
+		"top-banner top-banner top-banner" auto
+		"global-nav global-nav global-nav" var(--lm-toolbar-h)
+		"left-sidebar main-view right-sidebar" minmax(0, 1fr)
+		"now-playing-bar now-playing-bar now-playing-bar" 0
+		/ auto minmax(0, 1fr) auto !important;
+	gap: 0 var(--lm-gap) !important;
+	padding: var(--lm-gap) !important;
+	background: transparent !important;
+}
+
+.Root__nav-bar,
+.Root__main-view,
+.Root__right-sidebar-peek,
+/* the right panel clips its content at Spotify's 8px: a full-bleed Canvas video showed tighter corners */
+.Root__right-sidebar-overlayWrapper,
+.Root__right-sidebar-peekContent {
+	border-radius: var(--lm-radius-panel) !important;
+}
+
+.Root__nav-bar,
+.Root__main-view,
+.Root__right-sidebar {
+	margin-top: var(--lm-gap);
+}
+
+.Root__main-view {
+	background: var(--lm-bg-content) !important;
+	box-shadow: inset 0 0 0 var(--lm-edge-w) var(--lm-glass-edge);
+}
+
+.Root__nav-bar .main-navBar-mainNav,
+.Root__nav-bar .main-yourLibraryX-library,
+.Root__nav-bar .main-yourLibraryX-libraryContainer,
+.Root__right-sidebar aside,
+.Root__right-sidebar aside::before,
+.Root__right-sidebar .main-nowPlayingView-container {
+	background: transparent !important;
+}
+
+/* Scroll-edge effect instead of a flat coloured bar when content scrolls under the page header */
+/* Dense enough that scrolled titles don't read through the sticky page title. iOS bar edge: a hairline, not a
+   fade — a faded edge showed a strip of rows between the bar and a stuck column header */
+.main-topBar-background {
+	background: color-mix(in srgb, var(--lm-bg-content-solid) 92%, transparent) !important;
+	backdrop-filter: blur(20px) saturate(180%);
+	box-shadow: 0 1px 0 var(--lm-separator);
+}
+
+/* Toolbar: a transparent row where each group is its own glass capsule.
+   Its search dropdown hangs down over the panels, so the toolbar layer sits above them (pill: 10, toasts: 20). */
+.Root__globalNav {
+	position: relative;
+	z-index: 30 !important;
+	grid-area: global-nav !important;
+	height: var(--lm-toolbar-h) !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	background: transparent !important;
+}
+/* The toolbar is narrower than the window, so Spotify switches to its inline search layout:
+   centre the field in the space between the left and right groups (never over the caption buttons). */
+.main-globalNav-searchSection {
+	inset: 0 !important;
+	height: 100% !important;
+	flex: 1 1 auto;
+	justify-content: center !important;
+}
+.main-globalNav-historyButtonsWrapper {
+	padding-left: 0 !important;
+	margin-left: 0 !important;
+}
+.main-globalNav-historyButtons {
+	height: 40px !important;
+	padding: 0 8px !important;
+	align-items: center;
+	border-radius: 999px;
+}
+.main-globalNav-historyButtons button {
+	height: 40px !important;
+}
+.main-globalNav-link-icon,
+[data-testid="user-widget-link"] {
+	width: 40px !important;
+	height: 40px !important;
+	padding: 8px !important;
+	border-radius: 50% !important;
+}
+.main-globalNav-searchContainer {
+	height: 40px !important;
+	align-items: center;
+	gap: 8px;
+}
+.main-globalNav-searchInputSection,
+.main-globalNav-searchInputContainer,
+.main-globalNav-searchInputContainer input {
+	height: 40px !important;
+	border-radius: 999px !important;
+}
+.main-globalNav-searchInputContainer input {
+	/* Encore gives form inputs a 48px min-block-size, which beat the 40px capsule and pushed the text 4px low */
+	min-block-size: 0 !important;
+	padding-block: 0 !important;
+	background: transparent !important;
+	box-shadow: none !important;
+}
+/* The capsule's glass lives on a ::before: the suggestions dropdown is rendered inside the capsule, and a
+   backdrop-filter on the capsule itself would stop the dropdown from blurring the page behind it */
+.main-globalNav-searchInputContainer {
+	isolation: isolate;
+}
+.main-globalNav-searchInputContainer::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	border-radius: inherit;
+	pointer-events: none;
+}
+.main-globalNav-searchInputContainer:focus-within::before {
+	box-shadow:
+		0 0 0 2px var(--lm-accent),
+		var(--lm-glass-shadow-sm) !important;
+}
+
+/* Search suggestions: the same thin glass as the menus, hanging 6px under the capsule */
+.main-globalNav-searchInputWrapper [role="listbox"] > div {
+	margin-top: 6px;
+	padding: 4px !important;
+	background: var(--lm-glass-thin-bg) !important;
+	backdrop-filter: blur(20px) saturate(180%);
+	border-radius: 16px !important;
+	box-shadow:
+		inset 0 0 0 var(--lm-edge-w) var(--lm-glass-edge),
+		var(--lm-menu-shadow) !important;
+}
+.main-globalNav-searchInputWrapper [role="listbox"] [role="row"] {
+	border-radius: 10px !important;
+}
+.main-globalNav-searchInputWrapper [role="listbox"] [role="row"] img {
+	border-radius: var(--lm-radius-art-sm);
+}
+/* The capsule's ring is the focus indicator: no second outline on the field itself */
+.main-globalNav-searchInputContainer input:focus-visible {
+	outline: none !important;
+}
+/* Spotify fades the "Ctrl L" hint into an opaque colour, which smears on glass */
+.main-globalNav-searchInputKBDWrapper,
+.main-globalNav-searchInputKBDWrapper * {
+	background: none !important;
+}
+.main-globalNav-contentRight > .main-actionButtons {
+	width: auto !important;
+	height: 40px !important;
+	padding: 0 6px !important;
+	border-radius: 999px;
+}
+.main-globalNav-historyButtons button,
+.main-globalNav-contentRight .main-actionButtons button {
+	background-color: transparent !important;
+}
+
+/* 5 · Player pill — FRAGILE: re-grids Spotify's now-playing bar ------------- */
+
+/* The pill floats over the content area: placed in the main-view grid cell, bottom-centred */
+.Root__now-playing-bar {
+	grid-area: main-view !important;
+	align-self: end;
+	justify-self: center;
+	position: relative;
+	z-index: 10 !important;
+	width: min(820px, 100% - 32px);
+	height: var(--lm-pill-h) !important;
+	margin: 0 0 16px !important;
+	padding: 0 !important;
+	background: transparent !important;
+	container: lm-pill / inline-size;
+}
+.main-nowPlayingBar-container {
+	width: 100% !important;
+	min-width: 0 !important;
+	height: 100% !important;
+	padding: 0 !important;
+	border-radius: 999px !important;
+}
+
+/* Row 1: controls | LCD (artwork + titles) | volume & extras. Row 2: the progress bar across the whole pill */
+.main-nowPlayingBar-nowPlayingBar {
+	display: grid !important;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	grid-template-rows: minmax(0, 1fr) 16px;
+	grid-template-areas:
+		"controls lcd      extra"
+		"progress progress progress";
+	column-gap: 12px;
+	align-items: center;
+	width: 100%;
+	height: 100%;
+	/* side padding follows the capsule's curve (radius 38px) so nothing sits in the rounded ends */
+	padding: 7px 26px;
+}
+/* Spotify paints a cover-tinted gradient (8px corners) on the bar and on its ::before layers: the glass replaces it */
+.main-nowPlayingBar-container,
+.main-nowPlayingBar-nowPlayingBar {
+	background-image: none !important;
+}
+.main-nowPlayingBar-container::before,
+.main-nowPlayingBar-nowPlayingBar::before {
+	display: none !important;
+}
+/* The CoverAmbience Marketplace extension repaints the bar (--bg-img, !important) and outlines its titles:
+   the more specific selectors below keep the glass pill whether or not it is enabled */
+.Root__now-playing-bar aside.main-nowPlayingBar-container,
+.Root__now-playing-bar [data-testid="now-playing-bar"] > div.main-nowPlayingBar-nowPlayingBar {
+	--bg-img: none !important;
+	--bg-img-before: none !important;
+	background-image: none !important;
+}
+.Root__now-playing-bar .main-nowPlayingBar-left :is(.main-trackInfo-name, .main-trackInfo-artists) {
+	text-shadow: none !important;
+}
+.main-nowPlayingBar-nowPlayingBar::after {
+	content: "";
+	grid-area: lcd;
+	align-self: stretch;
+	border-radius: 12px;
+	background: var(--lm-fill);
+	box-shadow: inset 0 0 0 var(--lm-edge-w) var(--lm-glass-edge);
+}
+.main-nowPlayingBar-center,
+.main-nowPlayingBar-center > .player-controls {
+	display: contents !important;
+}
+.player-controls__buttons {
+	grid-area: controls;
+	width: auto !important;
+	margin: 0 !important;
+	gap: 10px !important;
+	align-self: center;
+}
+/* LCD: artwork centred on the LCD's height at the left, titles centred beside it */
+.main-nowPlayingBar-left {
+	grid-area: lcd !important;
+	z-index: 1;
+	width: auto !important;
+	min-width: 0 !important;
+	height: 100% !important;
+	padding: 0 8px !important;
+}
+.main-nowPlayingBar-left .main-nowPlayingWidget-nowPlaying {
+	height: 100%;
+	align-items: center;
+	gap: 10px;
+}
+.main-nowPlayingBar-left :is(.main-coverSlotCollapsed-container, .main-nowPlayingWidget-coverArtContainer, .main-nowPlayingWidget-coverArt, img) {
+	width: 36px !important;
+	height: 36px !important;
+	margin: 0 !important;
+	border-radius: var(--lm-radius-art-sm) !important;
+}
+.main-nowPlayingBar-left .main-trackInfo-container {
+	flex: 1;
+	min-width: 0;
+	align-self: stretch;
+	align-content: center;
+	text-align: center;
+	justify-items: center;
+}
+/* Spotify's grid puts the badges (e.g. the "music video" icon) in their own left column: two flexible side
+   columns centre the badges + artist pair as one unit, the title spans the full width */
+.main-nowPlayingBar-left .main-trackInfo-container {
+	grid-template-columns: minmax(0, 1fr) auto minmax(0, max-content) minmax(0, 1fr) !important;
+	grid-template-areas:
+		"pretitle pretitle pretitle pretitle"
+		"title    title    title    title"
+		".        badges   subtitle ."
+		"quality  quality  quality  quality" !important;
+	column-gap: 4px;
+}
+.main-nowPlayingBar-left .main-trackInfo-container > * {
+	justify-self: center;
+	max-width: 100%;
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+.main-nowPlayingBar-left .main-trackInfo-name {
+	font-size: 13px;
+	font-weight: 600;
+}
+.main-nowPlayingBar-left .main-trackInfo-artists {
+	font-size: 12px;
+}
+/* The LCD has room for two lines: hide the extra badge line (e.g. "Lossless") */
+.main-nowPlayingBar-left .main-trackInfo-container > :last-child:not(.main-trackInfo-artists, .main-trackInfo-name) {
+	display: none;
+}
+/* "Hide song" stays reachable from the context menu and the right panel: the LCD keeps only "Add to Liked" */
+.main-nowPlayingBar-left .main-nowPlayingWidget-actionButtonWrapper [role="switch"] {
+	display: none !important;
+}
+.main-nowPlayingBar-left .main-trackInfo-container > * > * {
+	width: fit-content;
+	max-width: 100%;
+	margin-inline: auto;
+}
+/* The progress bar spans the whole pill: "time ━━━━ time", aligned with the edges of the controls above.
+   The times sit in the bar's side padding so the track width never changes. */
+.playback-bar {
+	grid-area: progress;
+	position: relative;
+	z-index: 2;
+	width: auto !important;
+	min-width: 0 !important;
+	height: 16px !important;
+	margin: 0 !important;
+	padding: 0 44px !important;
+	align-self: center;
+}
+.playback-bar :is([data-testid="playback-position"], [data-testid="playback-duration"]) {
+	position: absolute;
+	top: 0;
+	width: 38px !important;
+	min-width: 0 !important;
+	color: var(--lm-label-2) !important;
+	font-family: var(--lm-font-rounded);
+	font-size: 11px !important;
+	line-height: 16px;
+	font-variant-numeric: tabular-nums;
+}
+.playback-bar [data-testid="playback-position"] {
+	left: 0;
+	text-align: left;
+}
+.playback-bar [data-testid="playback-duration"] {
+	right: 0;
+	text-align: right;
+}
+.main-nowPlayingBar-right {
+	grid-area: extra;
+	width: auto !important;
+	min-width: 0 !important;
+}
+.main-nowPlayingBar-extraControls {
+	gap: 4px;
+}
+.main-nowPlayingBar-volumeBar {
+	width: 84px !important;
+	flex: none;
+}
+
+/* Sliders: thin track, accent fill, knob only on hover (Spotify already hides it at rest) */
+:root .progress-bar {
+	--bg-color: var(--lm-fill-2);
+	--fg-color: var(--lm-accent);
+	--is-active-fg-color: var(--lm-accent);
+}
+.Root__now-playing-bar .playback-bar .progress-bar {
+	--progress-bar-height: 4px;
+}
+
+/* Extra bars Spotify appends inside the player (Jam, "Listening on…" device bar) squeezed the pill and spilled
+   below it: they become a small capsule floating just above the pill */
+.main-nowPlayingBar-container > :not(.main-nowPlayingBar-nowPlayingBar) {
+	position: absolute !important;
+	left: 50%;
+	bottom: calc(100% + 8px);
+	transform: translateX(-50%);
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: auto !important;
+	max-width: calc(100% - 32px);
+	height: 26px !important;
+	padding: 0 12px !important;
+	border-radius: 999px !important;
+	white-space: nowrap;
+	box-shadow: var(--lm-glass-shadow-sm);
+}
+
+/* Content must stay reachable under the floating pill: pill + its 16px offset + the extra capsule (Jam,
+   device bar: 26px + 8px) + breathing room. Spotify locks the scroll child and <main> to height: 100% and
+   lets the page overflow them, so a padding there never lengthens the scroll — a spacer after the content does */
+.Root__main-view .main-view-container__scroll-node-child > main::after {
+	content: "";
+	display: block;
+	flex: none;
+	block-size: calc(var(--lm-pill-h) + 16px + 34px + 24px);
+}
+
+/* Narrow pill: drop secondary controls first so the LCD keeps room for the title */
+@container lm-pill (width < 820px) {
+	[data-testid="pip-toggle-button"] {
+		display: none !important;
+	}
+}
+@container lm-pill (width < 640px) {
+	[data-testid="fullscreen-mode-button"],
+	[data-testid="control-button-shuffle"],
+	.player-controls__left > button:not([data-testid]),
+	[data-testid="control-button-repeat"] {
+		display: none !important;
+	}
+}
+@container lm-pill (width < 560px) {
+	[data-testid="lyrics-button"],
+	.main-nowPlayingBar-volumeBar .volume-bar__slider-container,
+	.main-nowPlayingWidget-actionButtonWrapper {
+		display: none !important;
+	}
+}
+@container lm-pill (width < 480px) {
+	.main-nowPlayingBar-right {
+		display: none !important;
+	}
+}
+
+/* 6 · Components ------------------------------------------------------------ */
+
+/* Library */
+/* Large title on the text only: the collapse icon's wrapper inherited the 28px line and dropped the icon
+   onto its baseline, ~10px below the title's centre */
+.main-yourLibraryX-collapseButton button :is(h1, [class*="encore-text"]) {
+	font-size: 28px !important;
+	font-weight: 700 !important;
+	letter-spacing: -0.012em;
+	line-height: 1.1;
+}
+.main-yourLibraryX-collapseButton button > span:has(> svg) {
+	display: flex;
+}
+/* Collapsed library: the "open" icon fades in over the library icon on a solid --background-base plate,
+   a black square on the glass sidebar. No plate: the icon beneath fades out instead */
+.main-yourLibraryX-collapseButton button > span:has(> svg) ~ span:has(> svg) {
+	background: none !important;
+}
+.main-yourLibraryX-collapseButton button > span:has(> svg):has(~ span > svg) {
+	transition: opacity 0.1s ease-out;
+}
+.main-yourLibraryX-collapseButton button:is(:hover, :focus-visible) > span:has(> svg):has(~ span > svg) {
+	opacity: 0;
+}
+.Root__nav-bar [role="row"] [role="group"] {
+	border-radius: 10px !important;
+}
+.Root__nav-bar [role="row"] .x-entityImage-imageContainer:not([class*="circ"]),
+.Root__nav-bar [role="row"] .x-entityImage-imageContainer:not([class*="circ"]) img {
+	border-radius: var(--lm-radius-art-sm) !important;
+}
+.Root__nav-bar [role="row"][aria-selected="true"] [role="group"] {
+	background: color-mix(in srgb, var(--lm-accent) 16%, transparent) !important;
+}
+
+/* Tabs (e.g. Queue / Recently played): capsules — rounded hover, the selected one filled instead of underlined */
+[role="tablist"] [class*="-tab-item"] {
+	align-self: center;
+	min-block-size: 0 !important; /* Encore's 48px minimum, as on form inputs */
+	block-size: 32px !important;
+	border-radius: 999px !important;
+}
+[role="tablist"] [class*="-tab-item"][aria-selected="true"] {
+	background: var(--lm-fill-2) !important;
+}
+[role="tablist"] [class*="-tab-item"]::before {
+	display: none !important;
+}
+
+/* Chips (library filters, search filters) */
+[class*="legacy-chip"] {
+	border-radius: 999px !important;
+}
+/* The selected colour is painted by the chip's inner layer (an inverted Encore set) */
+[class*="legacy-chip--selected"],
+[class*="legacy-chip__inner--selected"] {
+	background-color: var(--lm-accent) !important;
+	color: var(--lm-on-accent) !important;
+}
+
+/* Playlist / album / artist header */
+/* Header colour layers vary by page (playlist, Liked Songs, artist…): the first becomes the accent tint, the rest go */
+.main-entityHeader-container > div:not(.main-entityHeader-contentWrapper) {
+	background: none !important;
+}
+.main-entityHeader-backgroundColor,
+.main-entityHeader-container > div:not(.main-entityHeader-contentWrapper):first-child {
+	background: linear-gradient(to bottom, color-mix(in srgb, var(--lm-accent) 18%, transparent), transparent) !important;
+}
+/* Spotify continues the playlist's own colour under the header and darkens the sticky top bar */
+.playlist-playlist-actionBarBackground-background,
+.main-topBar-overlay {
+	background: none !important;
+}
+.playlist-playlist-playlistContent {
+	background-color: transparent !important;
+}
+/* The blocks after any page header (artist, album, Liked Songs…) paint the opaque base colour too, as a
+   colour or as a gradient into it (a dark 232px band on Liked Songs). On artists without a banner photo that
+   band sits inside the block, coloured inline with the artist's colour (a red band under the header) */
+.main-entityHeader-container ~ div,
+.main-entityHeader-container ~ div > div:empty[style*="background-color"] {
+	background: none !important;
+}
+/* Artist photo: its layers run ~30px past the header, which that opaque block used to hide — fade them out
+   into the translucent content instead */
+.before-scroll-node:not(:empty) > * > * {
+	mask-image: linear-gradient(to bottom, #000 62%, transparent);
+}
+/* The photo sits outside the scrolling area, so it stayed behind the tracks once scrolled (the opaque block
+   covered it): driven by the page scroller, it now moves up 1:1 with the header, as if it scrolled with the
+   page, and fades as it goes */
+.main-view-container {
+	timeline-scope: --lm-page-scroll;
+}
+.main-view-container__scroll-node > [data-overlayscrollbars-viewport] {
+	scroll-timeline: --lm-page-scroll block;
+}
+@keyframes lm-hero-scroll {
+	to {
+		translate: 0 -400px;
+		opacity: 0;
+	}
+}
+.before-scroll-node:not(:empty) > * {
+	animation: lm-hero-scroll linear both;
+	animation-timeline: --lm-page-scroll;
+	animation-range: 0 400px;
+}
+/* "Posted by" badge on Artist pick: inverted pill whose text uses --background-press, mapped here to a
+   translucent fill, so the text vanished on the white pill. The one-line title-bearing text keeps it off
+   look-alikes (avatar + text), such as the Share dialog's owner line */
+:is(section, div) > figure.main-image-image:first-child + .standalone-ellipsis-one-line[title] {
+	color: var(--lm-bg-content-solid) !important;
+}
+/* Home: Spotify paints a 256px band (shortcut colour + gradient into the opaque base colour) that ended in a
+   hard edge over the translucent content — it becomes the same soft accent tint as the other page headers */
+html[data-lm-page="home"] .main-view-container__scroll-node-child > main > div > div:first-child[style*="background-color"] {
+	background: linear-gradient(to bottom, color-mix(in srgb, var(--lm-accent) 18%, transparent), transparent) !important;
+}
+/* Header text: Spotify keeps it light for its coloured band. On the accent tint it follows the mode,
+   except over an artist photo, which Spotify renders in .before-scroll-node (empty on every other page),
+   the scroll node's previous sibling: there it stays light in both modes. */
+.before-scroll-node:empty ~ .main-view-container__scroll-node :is(.main-entityHeader-container, .main-entityHeader-container *) {
+	--text-base: var(--lm-label);
+	--text-subdued: var(--lm-label-2);
+	--essential-base: var(--lm-label);
+}
+.before-scroll-node:not(:empty) ~ .main-view-container__scroll-node :is(.main-entityHeader-container, .main-entityHeader-container *) {
+	--text-base: #fff;
+	--text-subdued: rgba(255, 255, 255, 0.72);
+	--essential-base: #fff;
+	--spice-text: #fff;
+	--spice-rgb-text: 255, 255, 255;
+	--spice-subtext: rgba(255, 255, 255, 0.72);
+}
+.main-entityHeader-image,
+.main-entityHeader-imageContainer img {
+	border-radius: var(--lm-radius-art-hero) !important;
+	box-shadow: var(--lm-art-shadow) !important;
+}
+.main-entityHeader-title,
+.main-entityHeader-titleInner {
+	font-weight: 700 !important;
+	letter-spacing: -0.022em !important;
+	line-height: 1.05 !important;
+}
+/* Spotify's text-fit sets the size inline on the inner heading (e.g. 6rem): cap it and let long titles wrap */
+.main-entityHeader-title,
+.main-entityHeader-title h1 {
+	font-size: clamp(32px, 5cqi, 56px) !important;
+}
+.main-entityHeader-title h1 {
+	white-space: normal !important;
+	overflow-wrap: anywhere;
+}
+.main-entityHeader-metaData a {
+	color: var(--lm-accent) !important;
+	font-weight: 600;
+}
+
+/* Track list: hairline separators, soft hover, tabular durations */
+.main-trackList-trackListRow {
+	border-radius: 8px;
+	box-shadow: inset 0 calc(-1 * var(--lm-edge-w)) 0 var(--lm-separator);
+}
+.main-trackList-trackListRow:hover,
+.main-trackList-trackListRow:focus-within {
+	box-shadow: none;
+}
+.main-trackList-trackListHeaderRow {
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	border-bottom-color: var(--lm-separator) !important;
+}
+/* Once stuck under the top bar, Spotify paints the column header with --background-highlight (a translucent
+   fill here), so the rows showed through it: it takes the top bar's material instead. The header has no
+   background until it sticks, so the variable only changes the stuck state */
+.main-trackList-trackListHeader {
+	--background-highlight: color-mix(in srgb, var(--lm-bg-content-solid) 92%, transparent);
+	backdrop-filter: blur(20px) saturate(180%);
+}
+.main-trackList-rowImage {
+	border-radius: var(--lm-radius-art-sm) !important;
+}
+.main-trackList-rowDuration {
+	font-variant-numeric: tabular-nums;
+}
+
+/* Cards: no background, artwork lifts on hover, glass play button over the art */
+.main-card-cardContainer,
+.main-card-cardContainer:hover,
+.main-card-cardContainer:focus-within {
+	background: transparent !important;
+}
+.main-cardImage-imageWrapper,
+.main-cardImage-image {
+	border-radius: var(--lm-radius-art) !important;
+}
+.main-cardImage-imageWrapper.main-cardImage-circular,
+.main-cardImage-image.main-cardImage-circular {
+	border-radius: 50% !important;
+}
+.main-card-imageContainer {
+	transition: transform var(--lm-spring-dur) var(--lm-spring);
+}
+.main-cardImage-imageWrapper {
+	transition: box-shadow var(--lm-spring-dur) var(--lm-spring);
+}
+.main-card-cardContainer:hover .main-card-imageContainer {
+	transform: translateY(-2px) scale(1.02);
+}
+.main-card-cardContainer:hover .main-cardImage-imageWrapper {
+	box-shadow: var(--lm-art-shadow);
+}
+.main-card-cardContainer:active .main-card-imageContainer {
+	transform: scale(0.96);
+	transition-duration: 100ms;
+	transition-timing-function: ease-out;
+}
+.main-card-cardTitle {
+	font-weight: 500 !important;
+}
+/* Over artwork the button is always dark glass, whatever the mode */
+.main-card-PlayButtonContainer [class*="button-primary__inner"] {
+	--essential-base: #fff;
+	--text-base: #fff;
+	background-color: rgba(0, 0, 0, 0.45) !important;
+	color: #fff !important;
+	backdrop-filter: blur(20px) saturate(180%);
+	box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Now Playing panel (right) */
+.main-nowPlayingView-coverArtContainer {
+	border-radius: var(--lm-radius-art-hero);
+	box-shadow: var(--lm-art-shadow);
+}
+.main-nowPlayingView-coverArtContainer :is(img, .main-nowPlayingView-coverArt) {
+	border-radius: var(--lm-radius-art-hero) !important;
+}
+.main-nowPlayingView-contextItemInfo .main-trackInfo-name {
+	font-weight: 700;
+	letter-spacing: -0.012em;
+}
+.main-nowPlayingView-contextItemInfo .main-trackInfo-artists a {
+	color: var(--lm-accent) !important;
+}
+.main-nowPlayingView-section {
+	background: var(--lm-fill) !important;
+	border-radius: 14px !important;
+}
+/* Every section is now a card: those Spotify drew without a background ("Related music videos") had no padding,
+   so their title touched the top edge. Titled cards get the same 16px inset and aligned titles. */
+.main-nowPlayingView-section:has(> .main-nowPlayingView-sectionHeader:first-child) {
+	padding: 16px !important;
+}
+.main-nowPlayingView-section > .main-nowPlayingView-sectionHeader:first-child {
+	padding-left: 0 !important;
+}
+/* "Connect to a device" is swapped into the Now Playing view and cross-faded over the old content; without
+   Spotify's opaque backgrounds the old content showed through it. Hide it as soon as the device list is in. */
+.main-nowPlayingView-mainContainer:has([data-testid="device-picker-row-sidepanel"]) .main-nowPlayingView-panel {
+	visibility: hidden !important;
+}
+
+/* Scroll-edge effect: once the panel scrolls, its content fades out under the header instead of being cut */
+@property --lm-scroll-edge { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@keyframes lm-scroll-edge {
+	to {
+		--lm-scroll-edge: 24px;
+	}
+}
+.main-nowPlayingView-mainContainer > [data-overlayscrollbars-viewport] {
+	mask-image: linear-gradient(to bottom, transparent, #000 var(--lm-scroll-edge));
+	animation: lm-scroll-edge linear both;
+	animation-timeline: scroll(self);
+	animation-range: 0 40px;
+	scroll-timeline: --lm-npv-scroll block;
+}
+/* Header bar (context name): once scrolled, Spotify fills it with the opaque base colour and a heavy shadow.
+   It takes the panel's glass instead, fading in over the first 40px of scroll, with a hairline edge */
+.NowPlayingView {
+	timeline-scope: --lm-npv-scroll;
+}
+@keyframes lm-npv-bar {
+	from {
+		background-color: transparent;
+		box-shadow: 0 1px 0 transparent;
+		backdrop-filter: blur(0) saturate(100%);
+	}
+	to {
+		background-color: var(--lm-glass-thick-bg);
+		box-shadow: 0 1px 0 var(--lm-separator);
+		backdrop-filter: blur(20px) saturate(180%);
+	}
+}
+.main-nowPlayingView-headerWrapper {
+	animation: lm-npv-bar linear both;
+	animation-timeline: --lm-npv-scroll;
+	animation-range: 0 40px;
+	transition: none !important;
+}
+/* Spotify fades the track info into an opaque background over 280px (meant for Canvas videos), which ends in a
+   hard edge over the glass */
+.main-nowPlayingView-contextItemInfo::before {
+	display: none !important;
+}
+/* The Canvas video's own overlays (which darken it behind the title) end on the opaque base colour: where the
+   video stops, across the first card, that band met the glass in a hard line. The video fades out instead */
+.main-nowPlayingView-canvasVisualEnhancement {
+	mask-image: linear-gradient(to bottom, #000 65%, transparent);
+}
+
+/* 7 · Menus & overlays ------------------------------------------------------ */
+
+#context-menu ul[role="menu"] {
+	min-width: 220px;
+	padding: 5px !important;
+	border-radius: var(--lm-radius-menu) !important;
+}
+#context-menu [role="menuitem"] {
+	min-height: 30px;
+	padding: 5px 10px !important;
+	border-radius: var(--lm-radius-menu-item) !important;
+}
+/* macOS-style highlight: the hovered item fills with the accent */
+#context-menu [role="menuitem"]:is(:hover, :focus-visible, [aria-expanded="true"]) {
+	--text-base: var(--lm-on-accent);
+	--text-subdued: var(--lm-on-accent);
+	--essential-base: var(--lm-on-accent);
+	--essential-subdued: var(--lm-on-accent);
+	/* accent icons ("saved" check, pin) would vanish into the accent fill */
+	--text-bright-accent: var(--lm-on-accent);
+	--essential-bright-accent: var(--lm-on-accent);
+	background: var(--lm-accent) !important;
+	color: var(--lm-on-accent) !important;
+}
+#context-menu [role="menuitem"]:is(:hover, :focus-visible, [aria-expanded="true"]) * {
+	color: inherit !important;
+}
+#context-menu [role="menuitem"]:is(:hover, :focus-visible, [aria-expanded="true"]) svg {
+	fill: currentcolor !important;
+}
+
+:is([class*="-legacy-tooltip"], [class*="-tooltip "], [class$="-tooltip"]) {
+	border-radius: 8px !important;
+	font-size: 12px !important;
+	font-weight: 500 !important;
+}
+
+/* Confirmation and alert dialogs: Spotify renders them inverted (white on the dark UI). They follow the mode
+   instead, as thin glass; buttons keep their own sets (the destructive one stays red). The BEM children
+   (__title, __body…) are excluded, only the dialog box itself is matched. */
+:is([class*="-dialog-confirmation"], [class*="-dialog-alert"]):not([class*="__"]) {
+	--background-base: var(--lm-bg-content-solid);
+	--background-highlight: var(--lm-fill);
+	--background-press: var(--lm-fill-2);
+	--text-base: var(--lm-label);
+	--text-subdued: var(--lm-label-2);
+	--essential-base: var(--lm-label);
+	--essential-subdued: var(--lm-label-3);
+	--decorative-subdued: var(--lm-separator);
+	background: var(--lm-glass-thin-bg) !important;
+	backdrop-filter: blur(20px) saturate(180%);
+	border-radius: 16px !important;
+	box-shadow:
+		inset 0 0 0 var(--lm-edge-w) var(--lm-glass-edge),
+		var(--lm-menu-shadow) !important;
+	color: var(--lm-label) !important;
+}
+
+/* Toasts ("Added to queue"…) were anchored where Spotify's bottom bar used to be, under the floating pill:
+   lift their layer above the pill and place them just over it */
+.Root__top-container > :has(> .notistack-SnackbarContainer) {
+	z-index: 20 !important;
+}
+.notistack-SnackbarContainer {
+	bottom: calc(16px + var(--lm-pill-h) + 12px) !important;
+}
+/* Spotify's toast is an inverted (light) box: turn it into a thin-glass capsule that follows the mode */
+.notistack-Snackbar [class*="legacy-box--elevated"] {
+	--text-base: var(--lm-label);
+	--text-subdued: var(--lm-label-2);
+	--essential-base: var(--lm-label);
+	background: var(--lm-glass-thin-bg) !important;
+	backdrop-filter: blur(20px) saturate(180%);
+	border-radius: 999px !important;
+	box-shadow:
+		inset 0 0 0 var(--lm-edge-w) var(--lm-glass-edge),
+		var(--lm-menu-shadow) !important;
+	color: var(--lm-label) !important;
+}
+
+/* OverlayScrollbars (used by Spotify): thin capsule handles */
+.os-theme-spotify {
+	--os-size: 8px;
+	--os-padding-perpendicular: 2px;
+	--os-padding-axis: 2px;
+	--os-handle-border-radius: 999px;
+	--os-handle-bg: var(--lm-label-3);
+	--os-handle-bg-hover: var(--lm-label-2);
+	--os-handle-bg-active: var(--lm-label-2);
+}
+.os-theme-spotify .os-scrollbar-handle {
+	background: var(--lm-label-3) !important;
+	border-radius: 999px !important;
+}
+.os-theme-spotify .os-scrollbar-handle:hover {
+	background: var(--lm-label-2) !important;
+}
+
+/* 8 · Pages ----------------------------------------------------------------- */
+
+/* Lyrics: lines only carry hashed classes, so styling goes through the variables Spotify sets inline.
+   theme.js flags the lyrics route on <html>; the full-screen lyrics layer is only displayed while in use. */
+html[data-lm-page="lyrics"] .Root__main-view,
+.Root__lyrics-cinema {
+	background: transparent !important;
+	box-shadow: none !important;
+}
+[style*="--lyrics-color-background"] {
+	--lyrics-color-background: transparent !important;
+	--lyrics-color-active: var(--lm-label) !important;
+	--lyrics-color-passed: color-mix(in srgb, var(--lm-label) 45%, transparent) !important;
+	--lyrics-color-inactive: color-mix(in srgb, var(--lm-label) 35%, transparent) !important;
+	--lyrics-color-messaging: var(--lm-label-2) !important;
+	background: transparent !important;
+}
+
+/* 9 · Motion ---------------------------------------------------------------- */
+
+/* Accent glides from one artwork to the next; surfaces ease between light and dark */
+:root {
+	transition:
+		--lm-accent 600ms ease,
+		--spice-button 600ms ease,
+		--spice-button-active 600ms ease,
+		--lm-bg-window 300ms ease,
+		--lm-bg-content 300ms ease,
+		--lm-label 300ms ease,
+		--lm-glass-thick-bg 300ms ease,
+		--lm-glass-regular-bg 300ms ease;
+}
+
+/* Press feedback on pointer-down, spring back on release */
+:is(.player-controls__buttons button, .main-globalNav-historyButtons button, .main-globalNav-link-icon, .main-actionBar-ActionBarRow button, .main-nowPlayingBar-extraControls button) {
+	transition:
+		transform var(--lm-spring-dur) var(--lm-spring),
+		background-color 200ms ease,
+		color 200ms ease;
+}
+:is(.player-controls__buttons button, .main-globalNav-historyButtons button, .main-globalNav-link-icon, .main-actionBar-ActionBarRow button, .main-nowPlayingBar-extraControls button):active {
+	transform: scale(0.96);
+	transition-duration: 100ms;
+	transition-timing-function: ease-out;
+}
+:is(.main-trackList-trackListRow, .Root__nav-bar [role="row"] [role="group"]) {
+	transition: transform var(--lm-spring-dur) var(--lm-spring);
+}
+:is(.main-trackList-trackListRow, .Root__nav-bar [role="row"] [role="group"]):active {
+	transform: scale(0.985);
+	transition-duration: 100ms;
+	transition-timing-function: ease-out;
+}
+
+/* Menus fade in. No scale: a transform on the menu list would clip its submenus (see section 3). */
+@keyframes lm-fade-in {
+	from {
+		opacity: 0;
+	}
+}
+#context-menu ul[role="menu"] {
+	animation: lm-fade-in 180ms ease-out;
+}
+
+/* 10 · Accessibility -------------------------------------------------------- */
+
+/* Keyboard focus ring on controls only: containers Spotify focuses (track list grid, panels) stay unmarked */
+:is(button, a, input, select, textarea, [role="button"], [role="link"], [role="menuitem"], [role="option"], [role="row"], [role="tab"], [role="switch"], [role="checkbox"], [role="slider"]):focus-visible {
+	outline: 2px solid var(--lm-accent) !important;
+	outline-offset: 2px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	:is(.player-controls__buttons button, .main-globalNav-historyButtons button, .main-globalNav-link-icon, .main-actionBar-ActionBarRow button, .main-nowPlayingBar-extraControls button, .main-trackList-trackListRow, .Root__nav-bar [role="row"] [role="group"]):active,
+	.main-card-cardContainer:hover .main-card-imageContainer,
+	.main-card-cardContainer:active .main-card-imageContainer {
+		transform: none !important;
+	}
+	.lm-backdrop-layer,
+	.lm-backdrop-layer.is-visible {
+		transform: scale(1.3);
+		transition: opacity 200ms ease;
+	}
+	#context-menu ul[role="menu"] {
+		animation: lm-fade-in 150ms ease;
+	}
+}
+
+@media (prefers-reduced-transparency: reduce) {
+	:root,
+	:root[data-lm-theme] {
+		--lm-bg-content: var(--lm-bg-content-solid);
+		--lm-glass-thick-bg: var(--lm-bg-content-solid);
+		--lm-glass-regular-bg: var(--lm-bg-content-solid);
+		--lm-glass-thin-bg: var(--lm-bg-content-solid);
+		--lm-glass-edge: var(--lm-separator);
+	}
+	.lm-backdrop-layer {
+		display: none;
+	}
+	:is(.Root__nav-bar, .Root__right-sidebar-peek, .main-nowPlayingBar-container, .main-globalNav-historyButtons, .main-globalNav-link-icon, .main-globalNav-searchInputContainer, .main-globalNav-contentRight > .main-actionButtons, [data-testid="user-widget-link"], [data-tippy-root], .main-topBar-background, .main-card-PlayButtonContainer [class*="button-primary__inner"], [class*="-legacy-tooltip"], [class*="-tooltip "], [class$="-tooltip"], .notistack-Snackbar [class*="legacy-box--elevated"]) {
+		backdrop-filter: none !important;
+	}
+}
+
+@media (prefers-contrast: more) {
+	:root,
+	:root[data-lm-theme] {
+		--lm-label-2: color-mix(in srgb, var(--lm-label) 80%, transparent);
+		--lm-label-3: color-mix(in srgb, var(--lm-label) 55%, transparent);
+		--lm-edge-w: 1px;
+		--lm-glass-edge: var(--lm-label-3);
+		--lm-bg-content: var(--lm-bg-content-solid);
+		--lm-glass-thick-bg: var(--lm-bg-content-solid);
+		--lm-glass-regular-bg: var(--lm-bg-content-solid);
+		--lm-glass-thin-bg: var(--lm-bg-content-solid);
+	}
+}

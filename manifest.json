@@ -1,0 +1,11 @@
+{
+	"name": "LiquidMusic",
+	"description": "Frosted glass, a floating player and an accent colour taken from the song's artwork. Inspired by iOS 27 and Apple Music.",
+	"preview": "screenshots/home-dark.webp",
+	"readme": "README.md",
+	"usercss": "user.css",
+	"schemes": "color.ini",
+	"include": ["https://raw.githubusercontent.com/fraustiz/LiquidMusic/main/theme.js"],
+	"authors": [{ "name": "fraustiz", "url": "https://github.com/fraustiz" }],
+	"tags": ["dark", "light", "glass", "dynamic colours", "apple"]
+}

@@ -1,0 +1,17 @@
+# Development only — not needed to install or use the theme
+# (the Marketplace only reads manifest.json, user.css, color.ini, theme.js, the README and the preview image)
+dev/
+docs/
+tests/
+.superpowers/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Tooling
+node_modules/
+*.log
