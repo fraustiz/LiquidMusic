@@ -990,10 +990,17 @@ html[data-lm-page="home"] .main-view-container__scroll-node-child > main > div >
 	}
 }
 .main-nowPlayingView-headerWrapper {
+	/* When the panel can't scroll, the scroll timeline is inactive and Spotify's own "scrolled" style shows,
+	   sometimes stale (after leaving full screen): an opaque band above the artwork. Nothing can scroll under
+	   the bar then, so it stays clear */
+	--background-base: transparent;
 	animation: lm-npv-bar linear both;
 	animation-timeline: --lm-npv-scroll;
 	animation-range: 0 40px;
 	transition: none !important;
+}
+.NowPlayingView .main-nowPlayingView-headerContainer > .main-nowPlayingView-headerWrapper {
+	box-shadow: none;
 }
 /* Spotify fades the track info into an opaque background over 280px (meant for Canvas videos), which ends in a
    hard edge over the glass */
