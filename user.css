@@ -652,14 +652,16 @@ body {
 
 /* Full-screen Now Playing (Spotify's "cinema" mode) covers the whole window, top bar row included, above a
    player row. Here the toolbar sits above everything (z-index 30) and the pill floats: the view's own buttons
-   ended up under the toolbar and its content under the pill. The toolbar steps aside, and the view's scroll
-   area stops above the pill with a short fade */
-html[data-cinema-npv-postEnter] .Root__globalNav {
+   ended up under the toolbar and its content under the pill. In true full screen the toolbar steps aside (the
+   same expanded view inside a window, after "Exit full screen" from the view, sits below the toolbar, which
+   stays). The content fades out before the pill; Spotify already leaves room at the end of the scroll for its
+   player row, so the last section still clears it (shortening the scroll area instead shrank the layout and
+   pushed the sections over the artwork) */
+html[data-cinema-npv-postEnter] :fullscreen .Root__globalNav {
 	visibility: hidden;
 }
 html[data-cinema-npv-postEnter] .main-actionBar-ActionBarContainer > [data-overlayscrollbars-viewport] {
-	max-block-size: calc(100% - var(--lm-pill-h) - 48px);
-	mask-image: linear-gradient(to bottom, #000 calc(100% - 40px), transparent);
+	mask-image: linear-gradient(to bottom, #000 calc(100% - var(--lm-pill-h) - 88px), transparent calc(100% - var(--lm-pill-h) - 48px));
 }
 
 /* Narrow pill: drop secondary controls first so the LCD keeps room for the title */
