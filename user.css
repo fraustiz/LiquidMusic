@@ -650,6 +650,18 @@ body {
 	block-size: calc(var(--lm-pill-h) + 16px + 34px + 24px);
 }
 
+/* Full-screen Now Playing (Spotify's "cinema" mode) covers the whole window, top bar row included, above a
+   player row. Here the toolbar sits above everything (z-index 30) and the pill floats: the view's own buttons
+   ended up under the toolbar and its content under the pill. The toolbar steps aside, and the view's scroll
+   area stops above the pill with a short fade */
+html[data-cinema-npv-postEnter] .Root__globalNav {
+	visibility: hidden;
+}
+html[data-cinema-npv-postEnter] .main-actionBar-ActionBarContainer > [data-overlayscrollbars-viewport] {
+	max-block-size: calc(100% - var(--lm-pill-h) - 48px);
+	mask-image: linear-gradient(to bottom, #000 calc(100% - 40px), transparent);
+}
+
 /* Narrow pill: drop secondary controls first so the LCD keeps room for the title */
 @container lm-pill (width < 820px) {
 	[data-testid="pip-toggle-button"] {
