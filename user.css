@@ -992,6 +992,17 @@ html[data-lm-page="home"] .main-view-container__scroll-node-child > main > div >
 .main-nowPlayingView-canvasVisualEnhancement {
 	mask-image: linear-gradient(to bottom, #000 65%, transparent);
 }
+/* The track title sits on the video's darkened lower part: in light mode its dark text and dark accent links
+   were unreadable there, so over a Canvas they stay light */
+html[data-lm-theme="light"] .main-nowPlayingView-nowPlayingGrid:has(.main-nowPlayingView-canvasVisualEnhancement video) .main-nowPlayingView-contextItemInfo {
+	--spice-text: #fff;
+	--text-base: #fff;
+	--text-subdued: rgba(255, 255, 255, 0.75);
+	color: #fff;
+}
+html[data-lm-theme="light"] .main-nowPlayingView-nowPlayingGrid:has(.main-nowPlayingView-canvasVisualEnhancement video) .main-nowPlayingView-contextItemInfo .main-trackInfo-artists a {
+	color: rgba(255, 255, 255, 0.85) !important;
+}
 
 /* 7 · Menus & overlays ------------------------------------------------------ */
 
