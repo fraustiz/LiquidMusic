@@ -663,6 +663,15 @@ html[data-cinema-npv-postEnter] :fullscreen .Root__globalNav {
 html[data-cinema-npv-postEnter] .main-actionBar-ActionBarContainer > [data-overlayscrollbars-viewport] {
 	mask-image: linear-gradient(to bottom, #000 calc(100% - var(--lm-pill-h) - 88px), transparent calc(100% - var(--lm-pill-h) - 48px));
 }
+/* Spotify fills the gaps around the expanded view with a black outline (its app background): over the artwork
+   backdrop that drew a black frame, and the toolbar's capsules overlapped its top edge. The view becomes a panel
+   like the others instead */
+html[data-cinema-npv-postEnter] :is(.main-actionBar-ActionBarContainer, :has(> .main-actionBar-ActionBarContainer)) {
+	outline: none !important;
+}
+html[data-cinema-npv-postEnter] .main-actionBar-ActionBarContainer {
+	border-radius: var(--lm-radius-panel) !important;
+}
 
 /* Narrow pill: drop secondary controls first so the LCD keeps room for the title */
 @container lm-pill (width < 820px) {
