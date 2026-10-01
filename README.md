@@ -68,8 +68,14 @@ text falls back to SF Pro, Segoe UI Variable, then your system font.
 
 ## Compatibility
 
-Built and tested with Spicetify 2.45.1 and Spotify 1.3.0 on Windows 11. Spotify changes its interface often; if
-something looks off after an update, please open an issue with a screenshot and your Spotify version.
+Built and tested with Spicetify 2.45.1 and Spotify 1.3.0 and 1.3.3 on Windows 11.
+
+Themes style Spotify through readable class names that Spicetify adds from its class map. When a Spotify update
+lands before Spicetify's map covers it (Spotify 1.3.3 renamed nearly every class), LiquidMusic restores the names it
+needs itself, from markers Spotify keeps between versions, so the theme keeps working in the meantime.
+
+Spotify changes its interface often; if something looks off after an update, please open an issue with a screenshot
+and your Spotify version.
 
 ## Credits
 

@@ -230,7 +230,131 @@
 		return columnWidth < PILL_MIN_COLUMN;
 	}
 
+	// user.css styles Spotify through the readable class names Spicetify adds from its class map (css-map). When
+	// the map doesn't know the running Spotify (1.3.3 renamed nearly every hashed class), those names are missing
+	// and the theme falls apart. Each hook finds the same element through markers Spotify keeps between versions
+	// (ids, data-testid, structure) and gives it back its name. Order matters: a hook may build on names added by
+	// the hooks above it.
+	const CLASS_HOOKS = [
+		// Layout
+		["Root__top-container", ".Root > :has(> #main-view)"],
+		["Root__globalNav", "#global-nav-bar"],
+		["Root__nav-bar", "#Desktop_LeftSidebar_Id"],
+		["Root__main-view", "#main-view"],
+		["Root__right-sidebar", ".Root__top-container > :has(> .LayoutResizer__inline-start)"],
+		["Root__right-sidebar-peek", ".Root__right-sidebar > :not(.LayoutResizer__resize-bar)"],
+		["Root__right-sidebar-overlayWrapper", ".Root__right-sidebar-peek > *"],
+		["Root__right-sidebar-peekContent", ".Root__right-sidebar-overlayWrapper > :has(aside)"],
+		["main-nowPlayingView-container", ":has(> .NowPlayingView)"],
+		["Root__now-playing-bar", ":has(> [data-testid='now-playing-bar'])"],
+		// Library (left). Its row images get no hook: artists' round images can't be told from square ones
+		["main-navBar-mainNav", ".Root__nav-bar > nav"],
+		["main-yourLibraryX-library", ".Root__nav-bar > nav > :has(.YourLibraryX)"],
+		["main-yourLibraryX-libraryContainer", ".YourLibraryX"],
+		["main-yourLibraryX-collapseButton", ".YourLibraryX header > * > :first-child:has(button)"],
+		["main-yourLibraryX-libraryRootlist", ".YourLibraryX [data-overlayscrollbars-viewport] > :first-child"],
+		// Toolbar
+		["main-globalNav-historyButtonsWrapper", "#global-nav-bar > div:first-of-type"],
+		["main-globalNav-historyButtons", ".main-globalNav-historyButtonsWrapper > * > :has(> button + button)"],
+		["main-globalNav-searchSection", "#global-nav-bar > :has([role='search'])"],
+		["main-globalNav-searchContainer", ".main-globalNav-searchSection > :has([role='search'])"],
+		["main-globalNav-link-icon", ".main-globalNav-searchContainer > button"],
+		["main-globalNav-searchInputSection", ".main-globalNav-searchContainer > :has(> [role='search'])"],
+		["main-globalNav-searchInputWrapper", ".main-globalNav-searchContainer > :has(> [role='search'])"],
+		["main-globalNav-searchInputContainer", "#global-nav-bar [role='search']"],
+		["main-globalNav-searchInputKBDWrapper", "#global-nav-bar [role='search'] :has(> kbd)"],
+		["main-globalNav-contentRight", "#global-nav-bar > :last-child > :has(> [data-testid='user-widget-link'])"],
+		["main-actionButtons", ".main-globalNav-contentRight > :first-child:has(button)"],
+		// Player pill
+		["main-nowPlayingBar-container", "[data-testid='now-playing-bar']"],
+		["main-nowPlayingBar-nowPlayingBar", "[data-testid='now-playing-bar'] > :has([data-testid='player-controls'])"],
+		["main-nowPlayingBar-left", ".main-nowPlayingBar-nowPlayingBar > :has([data-testid='now-playing-widget'])"],
+		["main-nowPlayingBar-center", ".main-nowPlayingBar-nowPlayingBar > :has([data-testid='player-controls'])"],
+		["main-nowPlayingBar-right", ".main-nowPlayingBar-nowPlayingBar > :has([data-testid='volume-bar'], [data-testid='control-button-queue'])"],
+		["main-nowPlayingBar-extraControls", ".main-nowPlayingBar-right > *"],
+		["main-nowPlayingBar-volumeBar", "[data-testid='volume-bar']"],
+		["main-nowPlayingWidget-nowPlaying", "[data-testid='now-playing-widget']"],
+		["main-coverSlotCollapsed-container", "[data-testid='CoverSlotCollapsed__container']"],
+		["main-nowPlayingWidget-coverArt", ":has(> [data-testid='cover-art-button'])"],
+		["main-nowPlayingWidget-coverArtContainer", "[data-testid='cover-art-button']"],
+		// Pages: sticky top bar, header (playlist, album, artist…), action bar, track list
+		["main-topBar-background", "[data-testid='topbar'] > :first-child"],
+		["main-topBar-overlay", ".main-topBar-background > *"],
+		["main-entityHeader-container", "[data-testid='entity-header']"],
+		["main-entityHeader-contentWrapper", "[data-testid='entity-header'] > .contentSpacing"],
+		["main-entityHeader-imageContainer", ".main-entityHeader-contentWrapper [data-testid$='-image']"],
+		["main-entityHeader-image", ".main-entityHeader-imageContainer img"],
+		["main-entityHeader-title", "[data-testid='entityTitle'], [data-testid='adaptiveEntityTitle']"],
+		["main-entityHeader-titleInner", "[data-testid='entityTitle'] h1, [data-testid='adaptiveEntityTitle'] > *"],
+		["main-entityHeader-metaData", ".main-entityHeader-contentWrapper > :last-child > div:last-child:not(:has([data-testid='entityTitle'], [data-testid='adaptiveEntityTitle']))"],
+		["playlist-playlist-actionBarBackground-background", "[data-testid='entity-header'] + div:empty"],
+		["main-actionBar-ActionBarRow", "[data-testid='action-bar-row']"],
+		["main-trackList-trackListHeader", "#main-view [role='grid'][aria-colcount] > :has([role='columnheader'])"],
+		["main-trackList-trackListHeaderRow", "#main-view [role='grid'][aria-colcount] [role='row']:has(> [role='columnheader'])"],
+		["main-trackList-trackListRow", "#main-view [role='grid'][aria-colcount] [role='row'] > [draggable='true']"],
+		["main-trackList-rowImage", ".main-trackList-trackListRow [aria-colindex='2'] img"],
+		["main-trackList-rowDuration", ".main-trackList-trackListRow [role='gridcell']:last-child [data-encore-id='text']"],
+		// Cards (home, search, artist pages…); artist and profile pictures are round
+		["main-card-cardContainer", "[data-encore-id='card']"],
+		["main-card-imageContainer", "[data-encore-id='card'] > :has(img)"],
+		["main-cardImage-imageWrapper", ".main-card-imageContainer > :first-child"],
+		["main-cardImage-image", ".main-cardImage-imageWrapper img"],
+		["main-cardImage-circular", "[data-encore-id='card']:has(> :is([aria-labelledby*=':artist:'], [aria-labelledby*=':user:'])) :is(.main-cardImage-imageWrapper, .main-cardImage-image)"],
+		["main-card-PlayButtonContainer", ".main-card-imageContainer > :has([data-encore-id='buttonPrimary'])"],
+		["main-card-cardTitle", "[data-encore-id='cardTitle']"],
+		// Expanded / full-screen Now Playing: the only scroll host right under the root grid
+		["main-actionBar-ActionBarContainer", ".Root__top-container > * > [data-overlayscrollbars]"],
+		// Now Playing panel (right)
+		["main-nowPlayingView-headerContainer", ".NowPlayingView > * > :first-child:not([data-overlayscrollbars])"],
+		["main-nowPlayingView-headerWrapper", ".main-nowPlayingView-headerContainer > *"],
+		["main-nowPlayingView-headerTextWrapper", ".main-nowPlayingView-headerWrapper > :has(> a)"],
+		["main-nowPlayingView-mainContainer", ".NowPlayingView > * > [data-overlayscrollbars]"],
+		["main-nowPlayingView-panel", "[data-testid='NPV_Panel_OpenDiv']"],
+		["main-nowPlayingView-nowPlayingGrid", ".main-nowPlayingView-panel > :first-child > *"],
+		["main-nowPlayingView-coverArtContainer", ".main-nowPlayingView-nowPlayingGrid [data-testid='track-visual-enhancement'] [data-testid='cover-drop-target']"],
+		["main-nowPlayingView-coverArt", ".main-nowPlayingView-coverArtContainer > *"],
+		["main-nowPlayingView-canvasVisualEnhancement", "[data-testid='track-visual-enhancement']:has(video)"],
+		["main-nowPlayingView-contextItemInfo", ".main-nowPlayingView-nowPlayingGrid > :has([data-testid='minimized-track-visual-enhancement'])"],
+		["main-nowPlayingView-section", ".main-nowPlayingView-panel > :not(:first-child)"],
+		["main-nowPlayingView-sectionHeader", ".main-nowPlayingView-section :has(> h2)"],
+		["main-nowPlayingView-aboutArtist", ".main-nowPlayingView-section:has([style*='background-image'])"],
+		// Track title and artists, in the pill and in the Now Playing panel
+		["main-trackInfo-container", "[data-testid='now-playing-widget'] > [data-testid='CoverSlotCollapsed__container'] + *, .main-nowPlayingView-contextItemInfo > [data-testid='minimized-track-visual-enhancement'] + *"],
+		["main-trackInfo-name", ".main-trackInfo-container > :first-child"],
+		["main-trackInfo-artists", ".main-nowPlayingWidget-nowPlaying .main-trackInfo-container > :nth-child(3), .main-nowPlayingView-contextItemInfo .main-trackInfo-container > :nth-child(2)"],
+		["main-nowPlayingWidget-actionButtonWrapper", "[data-testid='now-playing-widget'] > :last-child:has(button)"],
+		["player-controls", "[data-testid='player-controls']"],
+		["player-controls__buttons", "[data-testid='general-controls']"],
+		["player-controls__left", "[data-testid='general-controls'] > :first-child"],
+		["playback-bar", "[data-testid='player-controls'] > :has([data-testid='playback-position'])"],
+		["progress-bar", "[data-testid='progress-bar']"],
+	];
+
+	// Gives each element matched by a hook its class, when it doesn't already have it. Several passes, so hooks
+	// can build on classes added in the pass before. Returns how many classes were added.
+	function applyClassHooks(root, hooks) {
+		const combined = hooks.map(([, selector]) => selector).join(", ");
+		let added = 0;
+		for (let pass = 0; pass < 8; pass++) {
+			let addedThisPass = 0;
+			const targets = [...(root.matches?.(combined) ? [root] : []), ...(root.querySelectorAll?.(combined) ?? [])];
+			for (const el of targets) {
+				for (const [name, selector] of hooks) {
+					if (!el.classList.contains(name) && el.matches(selector)) {
+						el.classList.add(name);
+						addedThisPass++;
+					}
+				}
+			}
+			added += addedThisPass;
+			if (!addedThisPass) break;
+		}
+		return added;
+	}
+
 	const helpers = {
+		CLASS_HOOKS,
+		applyClassHooks,
 		resolveMode,
 		pillNeedsFullWidth,
 		parseColor,
@@ -298,6 +422,46 @@
 			warn(e);
 		}
 	}
+
+	// Restores the readable class names when Spicetify's class map doesn't cover this Spotify (see CLASS_HOOKS).
+	// With the map present, the main view already carries its name and there is nothing to do. Started before the
+	// Spicetify APIs are ready, so the layout is themed as early as possible; the main view can appear late.
+	function startClassHooks(attempt) {
+		const mainView = document.querySelector("#main-view, .Root__main-view");
+		if (!mainView || !document.body) {
+			if (attempt < 150) setTimeout(() => startClassHooks(attempt + 1), 100);
+			return;
+		}
+		if (mainView.classList.contains("Root__main-view")) return;
+		const hooks = CLASS_HOOKS.filter(([name, selector]) => {
+			try {
+				document.querySelector(selector);
+				return true;
+			} catch {
+				warn("class hook skipped (selector not supported):", name);
+				return false;
+			}
+		});
+		root.dataset.lmClassHooks = "on";
+		applyClassHooks(document.body, hooks);
+		// Re-checked where the page changes: an element's subtree when its children or its classes change (React
+		// re-renders and reset className), once per frame
+		const pending = new Set();
+		let scheduled = false;
+		const flush = () => {
+			scheduled = false;
+			for (const node of pending) if (node.isConnected) applyClassHooks(node, hooks);
+			pending.clear();
+		};
+		new MutationObserver((records) => {
+			for (const record of records) pending.add(record.target);
+			if (!scheduled) {
+				scheduled = true;
+				requestAnimationFrame(() => safe(flush));
+			}
+		}).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
+	}
+	safe(() => startClassHooks(0));
 
 	function setSpice(name, rgb) {
 		root.style.setProperty(`--spice-${name}`, toHex(rgb));
