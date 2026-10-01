@@ -972,6 +972,8 @@ html[data-lm-page="home"] .main-view-container__scroll-node-child > main > div >
 .main-nowPlayingView-section {
 	background: var(--lm-fill) !important;
 	border-radius: 14px !important;
+	/* Spotify 1.3.3 pulls the frameless "Related music videos" 8px to the left; as a card it must line up */
+	margin-inline: 0 !important;
 }
 /* Every section is now a card: those Spotify drew without a background ("Related music videos") had no padding,
    so their title touched the top edge. Titled cards get the same 16px inset and aligned titles. */
