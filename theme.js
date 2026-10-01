@@ -352,9 +352,15 @@
 		return added;
 	}
 
+	// Diagnostic: the theme names (from the hook table) that no element on the page carries, in table order.
+	function missingClassNames(hooks, isPresent) {
+		return hooks.map(([name]) => name).filter((name) => !isPresent(name));
+	}
+
 	const helpers = {
 		CLASS_HOOKS,
 		applyClassHooks,
+		missingClassNames,
 		resolveMode,
 		pillNeedsFullWidth,
 		parseColor,
@@ -462,6 +468,24 @@
 		}).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
 	}
 	safe(() => startClassHooks(0));
+
+	// After a Spotify update, LiquidMusic.hooks() in the DevTools console lists the names the theme styles that are
+	// missing from the current page, i.e. what broke. Some only exist on some pages (track rows on playlists,
+	// cards on home) or with the right panel open: check a few pages.
+	const PAGE_SPECIFIC = /^(main-entityHeader|main-trackList|main-topBar|main-actionBar|playlist-|main-card|main-nowPlayingView-(canvas|aboutArtist))/;
+	window.LiquidMusic.hooks = () => {
+		const missing = missingClassNames(CLASS_HOOKS, (name) => !!document.querySelector("." + CSS.escape(name)));
+		const report = {
+			translator: root.dataset.lmClassHooks === "on" ? "on (restoring names)" : "off (Spicetify's class map covers this Spotify)",
+			page: Spicetify.Platform?.History?.location?.pathname ?? location.pathname,
+			// Expected on every page (with the right panel open): any name here is broken
+			missing: missing.filter((name) => !PAGE_SPECIFIC.test(name)),
+			// Page headers, track lists, cards, Canvas…: only a problem on a page that shows them
+			notOnThisPage: missing.filter((name) => PAGE_SPECIFIC.test(name)),
+		};
+		console.info("[LiquidMusic]", report.missing.length ? `${report.missing.length} names missing` : "nothing missing", report);
+		return report;
+	};
 
 	function setSpice(name, rgb) {
 		root.style.setProperty(`--spice-${name}`, toHex(rgb));

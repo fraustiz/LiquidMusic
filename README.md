@@ -75,7 +75,8 @@ lands before Spicetify's map covers it (Spotify 1.3.3 renamed nearly every class
 needs itself, from markers Spotify keeps between versions, so the theme keeps working in the meantime.
 
 Spotify changes its interface often; if something looks off after an update, please open an issue with a screenshot
-and your Spotify version.
+and your Spotify version. If you can, add what `LiquidMusic.hooks()` returns in Spotify's DevTools console
+(`spicetify enable-devtools`): it lists the parts of Spotify the theme no longer finds.
 
 ## Credits
 
