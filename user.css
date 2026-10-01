@@ -255,6 +255,12 @@ body {
 
 /* 4 · Layout — FRAGILE: tied to Spotify's root grid (verified on 1.3.0.277) ---- */
 
+/* Spotify keeps the page at least 600px tall: in a shorter window (maximised on a small screen with display
+   scaling) the bottom was cut off, the player pill with it. The layout follows the window down instead */
+body {
+	min-height: 0 !important;
+}
+
 /* Toolbar across the top; library, content and right panel start at the same height underneath.
    Every Spotify area name is kept so nothing references a missing grid line. */
 .Root__top-container {
