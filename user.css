@@ -1034,6 +1034,22 @@ html[data-lm-page="home"] .main-view-container__scroll-node-child > main > div >
 .main-nowPlayingView-headerWrapper {
 	box-shadow: none !important;
 }
+/* Spicy Lyrics appends its lyrics card right under the artwork, inside the artwork's layer. Since Spotify 1.3.3 that
+   layer is absolutely positioned (panel-wide, 16px side padding) over a square box, so the card spilled over the
+   track title. While the card is there, the layer flows again at the same width, the artwork stays square and the
+   box grows with them: artwork, lyrics card, then the title, as on 1.3.0 */
+.main-nowPlayingView-nowPlayingGrid > :has(> [data-testid="track-visual-enhancement"] > #SpicyLyricsNPVCard) {
+	aspect-ratio: auto !important;
+	height: auto !important;
+}
+[data-testid="track-visual-enhancement"]:has(> #SpicyLyricsNPVCard) {
+	position: relative !important;
+	margin-inline: -16px;
+}
+[data-testid="track-visual-enhancement"]:has(> #SpicyLyricsNPVCard) > :first-child {
+	height: auto !important;
+	aspect-ratio: 1 / 1;
+}
 /* "About the artist": the heading sits on the artist's photo, which Spotify darkens at the top for it; in light
    mode it took the dark text colour and vanished into the photo, so over a photo it stays white */
 .main-nowPlayingView-aboutArtist [style*="url("] .main-nowPlayingView-sectionHeader {

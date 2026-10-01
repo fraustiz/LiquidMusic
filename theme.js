@@ -313,7 +313,7 @@
 		["main-nowPlayingView-nowPlayingGrid", ".main-nowPlayingView-panel > :first-child > *"],
 		["main-nowPlayingView-coverArtContainer", ".main-nowPlayingView-nowPlayingGrid [data-testid='track-visual-enhancement'] [data-testid='cover-drop-target']"],
 		["main-nowPlayingView-coverArt", ".main-nowPlayingView-coverArtContainer > *"],
-		["main-nowPlayingView-canvasVisualEnhancement", "[data-testid='track-visual-enhancement']:has(video)"],
+		["main-nowPlayingView-canvasVisualEnhancement", "[data-testid='track-visual-enhancement']:has(video):not(:has(#SpicyLyricsNPVCard))"],
 		["main-nowPlayingView-contextItemInfo", ".main-nowPlayingView-nowPlayingGrid > :has([data-testid='minimized-track-visual-enhancement'])"],
 		["main-nowPlayingView-section", ".main-nowPlayingView-panel > :not(:first-child)"],
 		["main-nowPlayingView-sectionHeader", ".main-nowPlayingView-section :has(> h2)"],
