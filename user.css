@@ -1001,6 +1001,29 @@ html[data-lm-page="home"] .main-view-container__scroll-node-child > main > div >
 	animation-timeline: scroll(self);
 	animation-range: 0 60px;
 }
+/* The header row names where the music plays from; with nothing to name (radio, autoplay) Spotify still reserved
+   it, an empty band above the artwork. The row then floats over the panel (its hover buttons over the artwork)
+   and the artwork moves up, inset like its sides */
+.main-nowPlayingView-headerContainer:not(:has(.main-nowPlayingView-headerTextWrapper h1:not(:empty))) {
+	position: absolute;
+	inset: 0 0 auto;
+	z-index: 2;
+}
+.main-nowPlayingView-headerContainer:not(:has(.main-nowPlayingView-headerTextWrapper h1:not(:empty))) ~ .main-nowPlayingView-mainContainer .main-nowPlayingView-panel {
+	padding-top: 16px;
+}
+/* Its buttons then sit on the artwork: small glass discs keep them readable on any cover */
+.main-nowPlayingView-headerContainer:not(:has(.main-nowPlayingView-headerTextWrapper h1:not(:empty))) button {
+	--text-subdued: #fff;
+	--text-base: #fff;
+	color: #fff;
+	background: rgba(0, 0, 0, 0.35) !important;
+	backdrop-filter: blur(12px) saturate(160%);
+	border-radius: 999px !important;
+	min-inline-size: 32px;
+	min-block-size: 32px;
+	justify-content: center;
+}
 /* Spotify's scrolled header (opaque base colour, and a heavy shadow on the bar and on its container, which drew a
    hard line under the title) stays off */
 .main-nowPlayingView-headerWrapper {
