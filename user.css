@@ -443,6 +443,17 @@ body {
 	background: transparent !important;
 	container: lm-pill / inline-size;
 }
+/* Content column too narrow for the pill's controls (theme.js sets data-lm-narrow): the pill spans the whole
+   window, like Spotify's own bar, and the side panels' lists get room at their end so nothing stays under it */
+html[data-lm-narrow] .Root__now-playing-bar {
+	grid-column: 1 / -1 !important;
+}
+html[data-lm-narrow] :is(.main-yourLibraryX-libraryRootlist, .main-nowPlayingView-panel)::after {
+	content: "";
+	display: block;
+	flex: none;
+	block-size: calc(var(--lm-pill-h) + 16px + 34px + 24px);
+}
 .main-nowPlayingBar-container {
 	width: 100% !important;
 	min-width: 0 !important;
