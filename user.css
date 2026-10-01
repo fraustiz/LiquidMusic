@@ -1033,6 +1033,15 @@ html[data-lm-page="home"] .main-view-container__scroll-node-child > main > div >
 .main-nowPlayingView-headerWrapper {
 	box-shadow: none !important;
 }
+/* "About the artist": the heading sits on the artist's photo, which Spotify darkens at the top for it; in light
+   mode it took the dark text colour and vanished into the photo, so over a photo it stays white */
+.main-nowPlayingView-aboutArtist [style*="url("] .main-nowPlayingView-sectionHeader {
+	--text-base: #fff;
+	color: #fff;
+}
+.main-nowPlayingView-aboutArtist [style*="url("] .main-nowPlayingView-sectionHeader * {
+	color: inherit !important;
+}
 /* Spotify fades the track info into an opaque background over 280px (meant for Canvas videos), which ends in a
    hard edge over the glass */
 .main-nowPlayingView-contextItemInfo::before {
