@@ -1083,6 +1083,65 @@ html[data-lm-page="home"] .main-view-container__scroll-node-child > main > div >
 	opacity: 1;
 	transform: none;
 }
+/* Its sticky header ("Sort by", colour scheme, search, settings) was an opaque band of the app's base colour with
+   black controls. It runs to the panel's edges and, driven by the page scroll, goes from clear at the top to the
+   top bar's dense glass with a hairline once content scrolls under it; the controls become the theme's capsules */
+@keyframes lm-sticky-band {
+	from {
+		background-color: transparent;
+		box-shadow: 0 1px 0 transparent;
+	}
+	to {
+		background-color: color-mix(in srgb, var(--lm-bg-content-solid) 92%, transparent);
+		box-shadow: 0 1px 0 var(--lm-separator);
+	}
+}
+.contentSpacing .marketplace-header {
+	margin-inline: calc(-1 * var(--content-spacing, 20px));
+	padding-inline: var(--content-spacing, 20px);
+	background-color: transparent;
+	animation: lm-sticky-band linear both;
+	animation-timeline: --lm-page-scroll;
+	animation-range: 0 40px;
+}
+.marketplace-header :is(.Dropdown-control, .searchbar-bar, .marketplace-header-icon-button) {
+	background-color: var(--lm-fill-2) !important;
+	color: var(--text-base) !important;
+	border: 0 !important;
+	border-radius: 999px !important;
+	transition: background-color 0.15s ease;
+}
+.marketplace-header :is(.Dropdown-control, .marketplace-header-icon-button):hover {
+	background-color: color-mix(in srgb, var(--lm-fill-2), var(--text-base) 10%) !important;
+}
+.marketplace-header .searchbar-bar {
+	padding-inline: 16px;
+}
+.marketplace-header .searchbar-bar::placeholder {
+	color: var(--text-subdued);
+}
+.marketplace-header .searchbar-bar:focus-visible {
+	outline: 2px solid var(--lm-accent);
+	outline-offset: 1px;
+}
+.marketplace-header .Dropdown-menu {
+	background: var(--lm-glass-thin-bg) !important;
+	border: 0 !important;
+	border-radius: 12px !important;
+	padding: 5px;
+	box-shadow:
+		inset 0 0 0 var(--lm-edge-w) var(--lm-glass-edge),
+		var(--lm-menu-shadow) !important;
+}
+.marketplace-header .Dropdown-option {
+	border-radius: 8px;
+	color: var(--text-base) !important;
+	background: transparent !important;
+}
+.marketplace-header .Dropdown-option:hover,
+.marketplace-header .Dropdown-option.is-selected {
+	background: var(--lm-fill-2) !important;
+}
 
 /* Now Playing panel (right) */
 .main-nowPlayingView-coverArtContainer {
