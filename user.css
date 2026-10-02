@@ -495,27 +495,9 @@ html[data-lm-narrow] :is(.main-yourLibraryX-libraryRootlist, .main-nowPlayingVie
 .main-nowPlayingBar-nowPlayingBar::before {
 	display: none !important;
 }
-/* The Cover Ambience Marketplace extension tints the bar from the left with the artwork's colour (set inline as
-   --cover-ambience-color, a ::before layer cross-fading to the next song's), fading into the bar's opaque
-   background. In the pill the tint fades into the glass instead, follows the capsule and is softer in light mode
-   (the extension picks dark tones). It only paints the outer capsule (it also targets the inner bar, which would
-   double it), and its title outlines go: the LCD keeps the titles readable. Without the extension its colour
-   variables don't exist, the gradients are invalid and nothing changes */
-.Root__now-playing-bar aside.main-nowPlayingBar-container {
-	--lm-ambience-strength: 90%;
-	--bg-img: linear-gradient(to right, color-mix(in srgb, var(--cover-ambience-color) var(--lm-ambience-strength), transparent), transparent 280px) !important;
-	--bg-img-before: linear-gradient(to right, color-mix(in srgb, var(--cover-ambience-color-before) var(--lm-ambience-strength), transparent), transparent 280px) !important;
-	background-image: var(--bg-img) !important;
-}
-html[data-lm-theme="light"] .Root__now-playing-bar aside.main-nowPlayingBar-container {
-	--lm-ambience-strength: 40%;
-}
-.Root__now-playing-bar aside.main-nowPlayingBar-container[style*="--cover-ambience"]::before {
-	display: block !important;
-	border-radius: inherit;
-	background-color: transparent !important;
-	background-image: var(--bg-img-before) !important;
-}
+/* The Cover Ambience Marketplace extension tints the whole bar (--bg-img on it and on a ::before layer, !important)
+   and outlines its titles: the pill stays glass, and the tint goes to the LCD instead (below) */
+.Root__now-playing-bar aside.main-nowPlayingBar-container,
 .Root__now-playing-bar [data-testid="now-playing-bar"] > div.main-nowPlayingBar-nowPlayingBar {
 	--bg-img: none !important;
 	--bg-img-before: none !important;
@@ -524,13 +506,30 @@ html[data-lm-theme="light"] .Root__now-playing-bar aside.main-nowPlayingBar-cont
 .Root__now-playing-bar .main-nowPlayingBar-left :is(.main-trackInfo-name, .main-trackInfo-artists) {
 	text-shadow: none !important;
 }
+/* The LCD (artwork and titles in the middle of the pill). With Cover Ambience, it takes the artwork's colour from
+   the left. The extension sets the colour on the pill (inherited here) and cross-fades songs through two variables
+   and an opacity: the LCD mixes them by that opacity, and the registered property animates the change. Without the
+   extension the colour is transparent and the LCD is unchanged */
+@property --lm-ambience { syntax: "<color>"; inherits: false; initial-value: transparent; }
 .main-nowPlayingBar-nowPlayingBar::after {
 	content: "";
 	grid-area: lcd;
 	align-self: stretch;
 	border-radius: 12px;
-	background: var(--lm-fill);
+	--lm-ambience-strength: 85%;
+	--lm-ambience: color-mix(
+		in srgb,
+		var(--cover-ambience-color-before, var(--cover-ambience-color)) calc(var(--cover-ambience-opacity, 1) * 100%),
+		var(--cover-ambience-color, var(--cover-ambience-color-before))
+	);
+	background:
+		linear-gradient(to right, color-mix(in srgb, var(--lm-ambience) var(--lm-ambience-strength), transparent), transparent 75%),
+		var(--lm-fill);
 	box-shadow: inset 0 0 0 var(--lm-edge-w) var(--lm-glass-edge);
+	transition: --lm-ambience 0.6s ease;
+}
+html[data-lm-theme="light"] .main-nowPlayingBar-nowPlayingBar::after {
+	--lm-ambience-strength: 40%;
 }
 .main-nowPlayingBar-center,
 .main-nowPlayingBar-center > .player-controls {
