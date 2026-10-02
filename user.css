@@ -1064,12 +1064,13 @@ html[data-lm-page="home"] .main-view-container__scroll-node-child > main > div >
 .marketplace-grid .main-cardSubHeader-root {
 	color: var(--text-subdued);
 }
+/* The install button sits in the card's bottom-right corner, as in Spotify's original card style; the last line of
+   text keeps clear of it */
 .marketplace-grid .main-card-PlayButtonContainer {
 	position: absolute;
 	z-index: 2;
-	top: calc(12px + 100cqi - 56px);
-	right: 20px;
-	bottom: auto !important;
+	right: 12px;
+	bottom: 12px !important;
 	height: 48px;
 	border-radius: 50%;
 	opacity: 0;
@@ -1081,6 +1082,10 @@ html[data-lm-page="home"] .main-view-container__scroll-node-child > main > div >
 .marketplace-grid .main-card-card:is(:hover, :focus-within) .main-card-PlayButtonContainer {
 	opacity: 1;
 	transform: none;
+}
+.marketplace-grid .main-card-cardMetadata > :has(+ .main-card-PlayButtonContainer) {
+	min-height: 36px;
+	padding-inline-end: 56px;
 }
 /* Its sticky header ("Sort by", colour scheme, search, settings) was an opaque band of the app's base colour with
    black controls. It runs to the panel's edges and, driven by the page scroll, goes from clear at the top to the
