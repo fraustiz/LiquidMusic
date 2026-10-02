@@ -495,9 +495,27 @@ html[data-lm-narrow] :is(.main-yourLibraryX-libraryRootlist, .main-nowPlayingVie
 .main-nowPlayingBar-nowPlayingBar::before {
 	display: none !important;
 }
-/* The CoverAmbience Marketplace extension repaints the bar (--bg-img, !important) and outlines its titles:
-   the more specific selectors below keep the glass pill whether or not it is enabled */
-.Root__now-playing-bar aside.main-nowPlayingBar-container,
+/* The Cover Ambience Marketplace extension tints the bar from the left with the artwork's colour (set inline as
+   --cover-ambience-color, a ::before layer cross-fading to the next song's), fading into the bar's opaque
+   background. In the pill the tint fades into the glass instead, follows the capsule and is softer in light mode
+   (the extension picks dark tones). It only paints the outer capsule (it also targets the inner bar, which would
+   double it), and its title outlines go: the LCD keeps the titles readable. Without the extension its colour
+   variables don't exist, the gradients are invalid and nothing changes */
+.Root__now-playing-bar aside.main-nowPlayingBar-container {
+	--lm-ambience-strength: 90%;
+	--bg-img: linear-gradient(to right, color-mix(in srgb, var(--cover-ambience-color) var(--lm-ambience-strength), transparent), transparent 280px) !important;
+	--bg-img-before: linear-gradient(to right, color-mix(in srgb, var(--cover-ambience-color-before) var(--lm-ambience-strength), transparent), transparent 280px) !important;
+	background-image: var(--bg-img) !important;
+}
+html[data-lm-theme="light"] .Root__now-playing-bar aside.main-nowPlayingBar-container {
+	--lm-ambience-strength: 40%;
+}
+.Root__now-playing-bar aside.main-nowPlayingBar-container[style*="--cover-ambience"]::before {
+	display: block !important;
+	border-radius: inherit;
+	background-color: transparent !important;
+	background-image: var(--bg-img-before) !important;
+}
 .Root__now-playing-bar [data-testid="now-playing-bar"] > div.main-nowPlayingBar-nowPlayingBar {
 	--bg-img: none !important;
 	--bg-img-before: none !important;
