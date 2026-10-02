@@ -279,6 +279,9 @@
 		["main-nowPlayingWidget-coverArtContainer", "[data-testid='cover-art-button']"],
 		// Pages: sticky top bar, header (playlist, album, artist…), action bar, track list
 		["main-topBar-background", "[data-testid='topbar'] > :first-child"],
+		// Not styled by the theme: the Marketplace mounts its tab bar (Extensions, Themes…) into this wrapper and
+		// shows none without it
+		["main-topBar-topbarContentWrapper", "[data-testid='topbar-content-wrapper']"],
 		["main-topBar-overlay", ".main-topBar-background > *"],
 		["main-entityHeader-container", "[data-testid='entity-header']"],
 		["main-entityHeader-contentWrapper", "[data-testid='entity-header'] > .contentSpacing"],
