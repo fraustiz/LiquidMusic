@@ -258,6 +258,9 @@
 		["main-globalNav-searchInputKBDWrapper", "#global-nav-bar [role='search'] :has(> kbd)"],
 		["main-globalNav-contentRight", "#global-nav-bar > :last-child > :has(> [data-testid='user-widget-link'])"],
 		["main-actionButtons", ".main-globalNav-contentRight > :has(> button[data-encore-id='buttonTertiary'])"],
+		// Not styled by the theme: Spicetify only adds extensions' top-bar buttons (Spicetify.Topbar) once it finds
+		// this button to copy its look from. Friend activity, or the group's last icon when it's turned off
+		["main-globalNav-buddyFeed", ".main-actionButtons > button[data-restore-focus-key='buddy_feed'], .main-actionButtons:not(:has(> [data-restore-focus-key='buddy_feed'])) > button[data-encore-id='buttonTertiary']:last-of-type"],
 		// Player pill
 		["main-nowPlayingBar-container", "[data-testid='now-playing-bar']"],
 		["main-nowPlayingBar-nowPlayingBar", "[data-testid='now-playing-bar'] > :has([data-testid='player-controls'])"],
