@@ -325,6 +325,15 @@ body {
 	padding: 0 !important;
 	background: transparent !important;
 }
+/* macOS draws its window controls (red, yellow, green) over the top-left corner of the window. Spotify makes room
+   for them with spacing this toolbar resets, so on macOS the toolbar reserves that room itself and Spotify's own
+   spacer (the empty first item of the left group) goes, so the two don't add up */
+html.spotify__os--is-macos .Root__globalNav {
+	padding-inline-start: 72px !important;
+}
+html.spotify__os--is-macos .main-globalNav-historyButtonsWrapper > * > :first-child:empty {
+	display: none !important;
+}
 /* The toolbar is narrower than the window, so Spotify switches to its inline search layout:
    centre the field in the space between the left and right groups (never over the caption buttons). */
 .main-globalNav-searchSection {
@@ -727,6 +736,26 @@ html[data-cinema-npv-postEnter] .main-actionBar-ActionBarContainer {
 	font-weight: 700 !important;
 	letter-spacing: -0.012em;
 	line-height: 1.1;
+}
+/* In a narrow library the large title ran into the Create button (the collapse icon pushes it right on hover):
+   it gets smaller below 340px, and truncates rather than overflow if it still doesn't fit */
+.Root__nav-bar {
+	container: lm-library / inline-size;
+}
+@container lm-library (width < 340px) {
+	.main-yourLibraryX-collapseButton button :is(h1, [class*="encore-text"]) {
+		font-size: 22px !important;
+	}
+}
+.main-yourLibraryX-collapseButton,
+.main-yourLibraryX-collapseButton > *,
+.main-yourLibraryX-collapseButton button {
+	min-width: 0;
+}
+.main-yourLibraryX-collapseButton button :is(h1, [class*="encore-text"]) {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 .main-yourLibraryX-collapseButton button > span:has(> svg) {
 	display: flex;
