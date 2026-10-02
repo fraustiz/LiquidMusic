@@ -1001,11 +1001,6 @@ html[data-lm-page="home"] .main-view-container__scroll-node-child > main > div >
 .main-card-cardContainer:hover .main-cardImage-imageWrapper {
 	box-shadow: var(--lm-art-shadow);
 }
-.main-card-cardContainer:active .main-card-imageContainer {
-	transform: scale(0.96);
-	transition-duration: 100ms;
-	transition-timing-function: ease-out;
-}
 .main-card-cardTitle {
 	font-weight: 500 !important;
 }
@@ -1437,25 +1432,13 @@ html[data-lm-page="lyrics"] .Root__main-view,
 		--lm-glass-regular-bg 300ms ease;
 }
 
-/* Press feedback on pointer-down, spring back on release */
+/* No press feedback (scaling buttons, rows or cards down while pressed): Spotify fires its buttons on release only
+   if the pointer is still over them, so a press near a button's edge slipped off it and was lost (the track's play
+   button needed two clicks) */
 :is(.player-controls__buttons button, .main-globalNav-historyButtons button, .main-globalNav-link-icon, .main-actionBar-ActionBarRow button, .main-nowPlayingBar-extraControls button) {
 	transition:
-		transform var(--lm-spring-dur) var(--lm-spring),
 		background-color 200ms ease,
 		color 200ms ease;
-}
-:is(.player-controls__buttons button, .main-globalNav-historyButtons button, .main-globalNav-link-icon, .main-actionBar-ActionBarRow button, .main-nowPlayingBar-extraControls button):active {
-	transform: scale(0.96);
-	transition-duration: 100ms;
-	transition-timing-function: ease-out;
-}
-:is(.main-trackList-trackListRow, .Root__nav-bar [role="row"] [role="group"]) {
-	transition: transform var(--lm-spring-dur) var(--lm-spring);
-}
-:is(.main-trackList-trackListRow, .Root__nav-bar [role="row"] [role="group"]):active {
-	transform: scale(0.985);
-	transition-duration: 100ms;
-	transition-timing-function: ease-out;
 }
 
 /* Menus fade in. No scale: a transform on the menu list would clip its submenus (see section 3). */
@@ -1477,9 +1460,7 @@ html[data-lm-page="lyrics"] .Root__main-view,
 }
 
 @media (prefers-reduced-motion: reduce) {
-	:is(.player-controls__buttons button, .main-globalNav-historyButtons button, .main-globalNav-link-icon, .main-actionBar-ActionBarRow button, .main-nowPlayingBar-extraControls button, .main-trackList-trackListRow, .Root__nav-bar [role="row"] [role="group"]):active,
-	.main-card-cardContainer:hover .main-card-imageContainer,
-	.main-card-cardContainer:active .main-card-imageContainer {
+	.main-card-cardContainer:hover .main-card-imageContainer {
 		transform: none !important;
 	}
 	.lm-backdrop-layer,
