@@ -223,13 +223,6 @@
 		return { auto: true, mode: prefersLight ? "light" : "dark" };
 	}
 
-	// Below this content-column width the pill drops most of its controls (container queries in user.css): it
-	// spans the whole window instead.
-	const PILL_MIN_COLUMN = 680;
-	function pillNeedsFullWidth(columnWidth) {
-		return columnWidth < PILL_MIN_COLUMN;
-	}
-
 	// user.css styles Spotify through the readable class names Spicetify adds from its class map (css-map). When
 	// the map doesn't know the running Spotify (1.3.3 renamed nearly every hashed class), those names are missing
 	// and the theme falls apart. Each hook finds the same element through markers Spotify keeps between versions
@@ -365,7 +358,6 @@
 		applyClassHooks,
 		missingClassNames,
 		resolveMode,
-		pillNeedsFullWidth,
 		parseColor,
 		toHex,
 		relativeLuminance,
@@ -640,7 +632,6 @@
 		watchMarketplaceScheme();
 		Spicetify.Player.addEventListener("songchange", () => safe(onSongChange));
 		watchPages(0);
-		watchContentWidth(0);
 		Object.assign(window.LiquidMusic, {
 			refresh: () => onSongChange(),
 			state: () => ({ mode: state.mode, auto: state.auto, accent: toHex(state.accent), request: state.request }),
@@ -659,19 +650,6 @@
 		const markPage = (location) => (root.dataset.lmPage = pageKind(location?.pathname));
 		markPage(history.location);
 		history.listen((location) => safe(() => markPage(location)));
-	}
-
-	// Flags <html data-lm-narrow> while the content column is too narrow for the pill (small window, wide side
-	// panels, or hidden in full-screen Now Playing). The column can appear late: wait for it (bounded to ~10 s).
-	function watchContentWidth(attempt) {
-		const column = document.querySelector(".Root__main-view");
-		if (!column) {
-			if (attempt < 40) setTimeout(() => watchContentWidth(attempt + 1), 250);
-			return;
-		}
-		const update = () => root.toggleAttribute("data-lm-narrow", pillNeedsFullWidth(column.getBoundingClientRect().width));
-		new ResizeObserver(() => safe(update)).observe(column);
-		update();
 	}
 
 	// At startup the player may not know the current item yet: wait for it (bounded to ~10 s).

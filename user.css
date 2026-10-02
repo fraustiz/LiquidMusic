@@ -438,9 +438,11 @@ html.spotify__os--is-macos .main-globalNav-historyButtonsWrapper > * > :first-ch
 
 /* 5 · Player pill — FRAGILE: re-grids Spotify's now-playing bar ------------- */
 
-/* The pill floats over the content area: placed in the main-view grid cell, bottom-centred */
+/* The pill floats over the window, bottom-centred across all three panels (in the content column alone it got
+   squeezed whenever the side panels were wide, down to hiding the track title) */
 .Root__now-playing-bar {
-	grid-area: main-view !important;
+	grid-row: main-view !important;
+	grid-column: 1 / -1 !important;
 	align-self: end;
 	justify-self: center;
 	position: relative;
@@ -452,12 +454,8 @@ html.spotify__os--is-macos .main-globalNav-historyButtonsWrapper > * > :first-ch
 	background: transparent !important;
 	container: lm-pill / inline-size;
 }
-/* Content column too narrow for the pill's controls (theme.js sets data-lm-narrow): the pill spans the whole
-   window, like Spotify's own bar, and the side panels' lists get room at their end so nothing stays under it */
-html[data-lm-narrow] .Root__now-playing-bar {
-	grid-column: 1 / -1 !important;
-}
-html[data-lm-narrow] :is(.main-yourLibraryX-libraryRootlist, .main-nowPlayingView-panel)::after {
+/* The pill can sit over the side panels too: their lists get room at their end so nothing stays under it */
+:is(.main-yourLibraryX-libraryRootlist, .main-nowPlayingView-panel)::after {
 	content: "";
 	display: block;
 	flex: none;
