@@ -292,6 +292,8 @@
 		["main-trackList-trackListHeaderRow", "#main-view [role='grid'][aria-colcount] [role='row']:has(> [role='columnheader'])"],
 		["main-trackList-trackListRow", "#main-view [role='grid'][aria-colcount] [role='row'] > [draggable='true']"],
 		["main-trackList-rowImage", ".main-trackList-trackListRow [aria-colindex='2'] img"],
+		// Not styled by the theme: Quick Queue's "button on the left" option looks for the title cell by this name
+		["main-trackList-rowSectionStart", ".main-trackList-trackListRow > [role='gridcell'][aria-colindex='2']"],
 		["main-trackList-rowDuration", ".main-trackList-trackListRow [role='gridcell']:last-child [data-encore-id='text']"],
 		// Cards (home, search, artist pages…); artist and profile pictures are round
 		["main-card-cardContainer", "[data-encore-id='card']"],
@@ -351,6 +353,15 @@
 		return added;
 	}
 
+	// Of the elements that changed, those no other changed element contains (each subtree is processed once).
+	function outermostNodes(nodes) {
+		const set = new Set(nodes);
+		return [...set].filter((node) => {
+			for (let parent = node.parentElement; parent; parent = parent.parentElement) if (set.has(parent)) return false;
+			return true;
+		});
+	}
+
 	// Diagnostic: the theme names (from the hook table) that no element on the page carries, in table order.
 	function missingClassNames(hooks, isPresent) {
 		return hooks.map(([name]) => name).filter((name) => !isPresent(name));
@@ -359,6 +370,7 @@
 	const helpers = {
 		CLASS_HOOKS,
 		applyClassHooks,
+		outermostNodes,
 		missingClassNames,
 		resolveMode,
 		parseColor,
@@ -428,44 +440,47 @@
 	}
 
 	// Restores the readable class names when Spicetify's class map doesn't cover this Spotify (see CLASS_HOOKS).
-	// With the map present, the main view already carries its name and there is nothing to do. Started before the
-	// Spicetify APIs are ready, so the layout is themed as early as possible; the main view can appear late.
-	function startClassHooks(attempt) {
-		const mainView = document.querySelector("#main-view, .Root__main-view");
-		if (!mainView || !document.body) {
-			if (attempt < 150) setTimeout(() => startClassHooks(attempt + 1), 100);
-			return;
-		}
-		if (mainView.classList.contains("Root__main-view")) return;
-		const hooks = CLASS_HOOKS.filter(([name, selector]) => {
-			try {
-				document.querySelector(selector);
+	// The observer starts with the theme's script, before the extensions load: on each change it adds the names
+	// right away, in the same batch, so extensions that look for them as soon as an element appears (Quick Queue
+	// reads .main-trackList-trackListRow in new rows) find them. Once the main view exists it decides: with the map
+	// present the main view already carries its name, and the observer stops.
+	function startClassHooks() {
+		let hooks = null;
+		const decide = () => {
+			const mainView = document.querySelector("#main-view, .Root__main-view");
+			if (!mainView || !document.body) return false;
+			if (mainView.classList.contains("Root__main-view")) {
+				hooks = [];
 				return true;
-			} catch {
-				warn("class hook skipped (selector not supported):", name);
-				return false;
 			}
-		});
-		root.dataset.lmClassHooks = "on";
-		applyClassHooks(document.body, hooks);
-		// Re-checked where the page changes: an element's subtree when its children or its classes change (React
-		// re-renders and reset className), once per frame
-		const pending = new Set();
-		let scheduled = false;
-		const flush = () => {
-			scheduled = false;
-			for (const node of pending) if (node.isConnected) applyClassHooks(node, hooks);
-			pending.clear();
+			hooks = CLASS_HOOKS.filter(([name, selector]) => {
+				try {
+					document.querySelector(selector);
+					return true;
+				} catch {
+					warn("class hook skipped (selector not supported):", name);
+					return false;
+				}
+			});
+			root.dataset.lmClassHooks = "on";
+			applyClassHooks(document.body, hooks);
+			return true;
 		};
-		new MutationObserver((records) => {
-			for (const record of records) pending.add(record.target);
-			if (!scheduled) {
-				scheduled = true;
-				requestAnimationFrame(() => safe(flush));
-			}
-		}).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
+		const observer = new MutationObserver((records) => {
+			safe(() => {
+				if (hooks === null && !decide()) return;
+				if (!hooks.length) return observer.disconnect();
+				// Re-checked where the page changed: the subtree of each changed element (children added, or classes
+				// reset by a React re-render), the outermost ones only
+				for (const node of outermostNodes(records.map((record) => record.target))) {
+					if (node.isConnected) applyClassHooks(node, hooks);
+				}
+			});
+		});
+		observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
+		safe(decide);
 	}
-	safe(() => startClassHooks(0));
+	safe(startClassHooks);
 
 	// After a Spotify update, LiquidMusic.hooks() in the DevTools console lists the names the theme styles that are
 	// missing from the current page, i.e. what broke. Some only exist on some pages (track rows on playlists,
