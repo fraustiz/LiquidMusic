@@ -1206,7 +1206,10 @@ html[data-lm-page="home"] .main-view-container__scroll-node-child > main > div >
 		--lm-scroll-edge: 104px;
 	}
 }
-.main-nowPlayingView-mainContainer > [data-overlayscrollbars-viewport] {
+/* Same for the Queue / Recently played panel: on macOS its list scrolls under the tabs, and the "Now playing"
+   heading showed through them */
+.main-nowPlayingView-mainContainer > [data-overlayscrollbars-viewport],
+.Root__right-sidebar aside:has(#queue-panel) [data-overlayscrollbars-viewport]:has(#queue-panel) {
 	mask-image: linear-gradient(to bottom, transparent calc(var(--lm-scroll-edge) * 0.6), #000 var(--lm-scroll-edge));
 	animation: lm-scroll-edge linear both;
 	animation-timeline: scroll(self);
