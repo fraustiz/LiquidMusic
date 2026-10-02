@@ -264,7 +264,7 @@
 		["main-globalNav-searchInputContainer", "#global-nav-bar [role='search']"],
 		["main-globalNav-searchInputKBDWrapper", "#global-nav-bar [role='search'] :has(> kbd)"],
 		["main-globalNav-contentRight", "#global-nav-bar > :last-child > :has(> [data-testid='user-widget-link'])"],
-		["main-actionButtons", ".main-globalNav-contentRight > :first-child:has(button)"],
+		["main-actionButtons", ".main-globalNav-contentRight > :has(> button[data-encore-id='buttonTertiary'])"],
 		// Player pill
 		["main-nowPlayingBar-container", "[data-testid='now-playing-bar']"],
 		["main-nowPlayingBar-nowPlayingBar", "[data-testid='now-playing-bar'] > :has([data-testid='player-controls'])"],
