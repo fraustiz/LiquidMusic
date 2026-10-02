@@ -1000,6 +1000,90 @@ html[data-lm-page="home"] .main-view-container__scroll-node-child > main > div >
 	box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.2) !important;
 }
 
+/* Marketplace: its cards are built from Spotify's old card components, whose styles Spotify no longer ships (none
+   left in 1.3.3), so they lay out as one full-width card per row. The theme draws them: a grid from the
+   Marketplace's own parameters, glass cards, square artwork, and the install button over the artwork on hover */
+.marketplace-grid.main-gridContainer-gridContainer {
+	display: grid !important;
+	grid-template-columns: repeat(var(--column-count, auto-fill), var(--column-width, minmax(180px, 1fr)));
+	gap: var(--grid-gap, 24px);
+}
+.marketplace-grid .main-card-card {
+	position: relative;
+	container-type: inline-size;
+	min-width: 0;
+	padding: 12px;
+	border-radius: 14px;
+	background: var(--lm-fill);
+	transition: background-color 0.2s ease;
+}
+.marketplace-grid .main-card-card:is(:hover, :focus-within) {
+	background: var(--lm-fill-2);
+}
+.marketplace-grid .main-card-draggable {
+	height: 100%;
+}
+.marketplace-grid .main-card-imageContainer {
+	position: relative;
+	margin-bottom: 12px;
+}
+.marketplace-grid .main-cardImage-imageWrapper {
+	position: relative;
+	aspect-ratio: 1;
+	overflow: hidden;
+	border-radius: var(--lm-radius-art);
+	background: var(--lm-fill-2);
+}
+.marketplace-grid .main-cardImage-image {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.marketplace-grid .main-cardHeader-link {
+	display: block;
+	min-width: 0;
+	color: var(--text-base);
+	text-decoration: none;
+}
+.marketplace-grid .main-cardHeader-text {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.main-type-balladBold {
+	font-size: 16px;
+	font-weight: 700;
+	line-height: 1.3;
+}
+.main-type-mestoBold {
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 1.4;
+}
+.marketplace-grid .main-cardSubHeader-root {
+	color: var(--text-subdued);
+}
+.marketplace-grid .main-card-PlayButtonContainer {
+	position: absolute;
+	z-index: 2;
+	top: calc(12px + 100cqi - 56px);
+	right: 20px;
+	bottom: auto !important;
+	height: 48px;
+	border-radius: 50%;
+	opacity: 0;
+	transform: translateY(6px);
+	transition:
+		opacity 0.2s ease,
+		transform var(--lm-spring-dur) var(--lm-spring);
+}
+.marketplace-grid .main-card-card:is(:hover, :focus-within) .main-card-PlayButtonContainer {
+	opacity: 1;
+	transform: none;
+}
+
 /* Now Playing panel (right) */
 .main-nowPlayingView-coverArtContainer {
 	border-radius: var(--lm-radius-art-hero);
