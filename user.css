@@ -843,9 +843,10 @@ html[data-cinema-npv-postEnter] .main-actionBar-ActionBarContainer {
 }
 /* The blocks after any page header (artist, album, Liked Songs…) paint the opaque base colour too, as a
    colour or as a gradient into it (a dark 232px band on Liked Songs). On artists without a banner photo that
-   band sits inside the block, coloured inline with the artist's colour (a red band under the header) */
+   band sits inside the block, coloured inline with the artist's colour (a red band under the header); on some
+   playlists it gets the colours as inline variables (--background-base…) and paints a gradient from them */
 .main-entityHeader-container ~ div,
-.main-entityHeader-container ~ div > div:empty[style*="background-color"] {
+.main-entityHeader-container ~ div > div:empty:is([style*="background-color"], [style*="--background-base"]) {
 	background: none !important;
 }
 /* Artist photo: its layers run ~30px past the header, which that opaque block used to hide — fade them out
@@ -943,11 +944,11 @@ html[data-lm-page="home"] .main-view-container__scroll-node-child > main > div >
 	border-bottom-color: var(--lm-separator) !important;
 }
 /* Once stuck under the top bar, Spotify paints the column header with --background-highlight (a translucent
-   fill here), so the rows showed through it: it takes the top bar's material instead. The header has no
-   background until it sticks, so the variable only changes the stuck state */
+   fill here), so the rows showed through it: it takes the top bar's colour, opaque, instead. The header has no
+   background until it sticks, so the variable only changes the stuck state (no blur: a backdrop filter applies even
+   without a background, and tinted a rectangle behind the header at rest) */
 .main-trackList-trackListHeader {
-	--background-highlight: color-mix(in srgb, var(--lm-bg-content-solid) 92%, transparent);
-	backdrop-filter: blur(20px) saturate(180%);
+	--background-highlight: var(--lm-bg-content-solid);
 }
 .main-trackList-rowImage {
 	border-radius: var(--lm-radius-art-sm) !important;
@@ -1226,20 +1227,30 @@ html[data-lm-page="home"] .main-view-container__scroll-node-child > main > div >
 	box-shadow: none !important;
 }
 /* Spicy Lyrics appends its lyrics card right under the artwork, inside the artwork's layer. Since Spotify 1.3.3 that
-   layer is absolutely positioned (panel-wide, 16px side padding) over a square box, so the card spilled over the
-   track title. While the card is there, the layer flows again at the same width, the artwork stays square and the
-   box grows with them: artwork, lyrics card, then the title, as on 1.3.0 */
-.main-nowPlayingView-nowPlayingGrid > :has(> [data-testid="track-visual-enhancement"] > #SpicyLyricsNPVCard) {
-	aspect-ratio: auto !important;
-	height: auto !important;
+   layer is absolutely positioned over a square box, so the card spilled over the track title. While the card is
+   there, the artwork's box and layer step out of the layout (display: contents): the artwork's square and the card
+   become items of the column, and the card comes after the track title (artwork, title, lyrics, then the panel's
+   sections). While a Canvas video plays, Spotify hides the artwork layer, card included: the layer is shown again
+   but the artwork's square stays empty, so the video shows through it */
+.main-nowPlayingView-nowPlayingGrid > :has(> [data-testid="track-visual-enhancement"] > #SpicyLyricsNPVCard),
+.main-nowPlayingView-nowPlayingGrid > * > [data-testid="track-visual-enhancement"]:has(> #SpicyLyricsNPVCard) {
+	display: contents !important;
 }
-[data-testid="track-visual-enhancement"]:has(> #SpicyLyricsNPVCard) {
-	position: relative !important;
-	margin-inline: -16px;
+.main-nowPlayingView-nowPlayingGrid > :has(> [data-testid="track-visual-enhancement"] > #SpicyLyricsNPVCard) > :empty {
+	display: none !important;
 }
-[data-testid="track-visual-enhancement"]:has(> #SpicyLyricsNPVCard) > :first-child {
+.main-nowPlayingView-nowPlayingGrid > * > [data-testid="track-visual-enhancement"]:has(> #SpicyLyricsNPVCard) {
+	visibility: visible !important;
+}
+.main-nowPlayingView-nowPlayingGrid > * > [data-testid="track-visual-enhancement"] > :first-child:has(~ #SpicyLyricsNPVCard) {
 	height: auto !important;
 	aspect-ratio: 1 / 1;
+}
+.main-nowPlayingView-nowPlayingGrid > :has(.canvasVideoContainerNPV video) > [data-testid="track-visual-enhancement"] > :first-child:has(~ #SpicyLyricsNPVCard) {
+	visibility: hidden !important;
+}
+.main-nowPlayingView-nowPlayingGrid > * > [data-testid="track-visual-enhancement"] > #SpicyLyricsNPVCard {
+	order: 1;
 }
 /* "About the artist": the heading sits on the artist's photo, which Spotify darkens at the top for it; in light
    mode it took the dark text colour and vanished into the photo, so over a photo it stays white */
