@@ -12,6 +12,8 @@ player, and an accent colour taken from whatever is playing.
 - **Colour from the artwork.** The accent (buttons, progress bar, highlights, links) is picked from the album cover
   and adjusted until it reads at 4.5:1 or better on the theme's surfaces. Panels thicken on busy covers so
   secondary text stays legible.
+- **Page colours.** Playlist and album pages keep their own colour at the top, as in Spotify, fading into the glass
+  and fading in when the page opens.
 - **Floating player.** The playback bar becomes a pill with an LCD-style track display, floating at the bottom of
   the window whatever the size of the side panels. On narrow windows it drops secondary controls first, so the title
   always has room.
@@ -34,8 +36,8 @@ player, and an accent colour taken from whatever is playing.
 Open the **Marketplace** in Spotify, go to **Themes**, search for **LiquidMusic** and install it. Pick `auto`, `dark`
 or `light` from the colour scheme menu at the top of the Marketplace.
 
-On Spotify 1.3.3, the Marketplace's own tab bar (Extensions, Themes…) doesn't show until Spicetify supports that
-version, so the Themes tab can't be reached: install LiquidMusic manually instead. Once it's active, it brings the
+On Spotify 1.3.3 (still the case with Spicetify 2.45.3), the Marketplace's own tab bar (Extensions, Themes…) doesn't
+show, so the Themes tab can't be reached: install LiquidMusic manually instead. Once it's active, it brings the
 Marketplace's tabs back.
 
 ### Manually
@@ -80,6 +82,7 @@ LiquidMusic is tested with these Marketplace extensions:
 - **Cover Ambience:** the artwork's colour tints the track display in the middle of the player pill.
 - **Extensions with top-bar buttons** (Syncify…): their buttons join the toolbar's glass capsule.
 - **The Marketplace itself** is restyled to match: glass cards, capsule controls.
+- **Smooth Reveal Playlist Gradient** (snippet): works, though the theme already fades page colours in.
 
 On Spotify 1.3.3, Quick Queue adds its buttons on album and artist pages, but not yet on playlists, Liked Songs or
 search results: there it can't read which track a row holds, with or without the theme, and needs an update from
@@ -87,7 +90,7 @@ its author.
 
 ## Compatibility
 
-Built and tested with Spicetify 2.45.1 and Spotify 1.3.0, 1.3.1 and 1.3.3 on Windows 11. macOS has its own
+Built and tested with Spicetify 2.45.1 and 2.45.3 and Spotify 1.3.0, 1.3.1 and 1.3.3 on Windows 11. macOS has its own
 adjustments (room for the window buttons) but hasn't been tested on a Mac.
 
 Themes style Spotify through readable class names that Spicetify adds from its class map. When a Spotify update

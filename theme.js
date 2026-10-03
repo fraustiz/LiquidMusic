@@ -281,6 +281,11 @@
 		["main-topBar-overlay", ".main-topBar-background > *"],
 		["main-entityHeader-container", "[data-testid='entity-header']"],
 		["main-entityHeader-contentWrapper", "[data-testid='entity-header'] > .contentSpacing"],
+		// The page's colour: the header's first layer, Spotify's gradient over it, the band under the header (also
+		// the names the "Smooth Reveal Playlist Gradient" snippet animates)
+		["main-entityHeader-backgroundColor", "[data-testid='entity-header'] > div:first-child:empty:is([style*='background-color'], [style*='--background-base'])"],
+		["main-entityHeader-overlay", ".main-entityHeader-backgroundColor + div:empty"],
+		["main-actionBarBackground-background", "[data-testid='entity-header'] ~ div:empty:is([style*='background-color'], [style*='--background-base']), [data-testid='entity-header'] ~ div > div:empty:first-child:is([style*='background-color'], [style*='--background-base'])"],
 		["main-entityHeader-imageContainer", ".main-entityHeader-contentWrapper [data-testid$='-image']"],
 		["main-entityHeader-image", ".main-entityHeader-imageContainer img"],
 		["main-entityHeader-title", "[data-testid='entityTitle'], [data-testid='adaptiveEntityTitle']"],

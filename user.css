@@ -843,16 +843,35 @@ html[data-cinema-npv-postEnter] .main-actionBar-ActionBarContainer {
 }
 
 /* Playlist / album / artist header */
-/* Header colour layers vary by page (playlist, Liked Songs, artist…): the first becomes the accent tint, the rest go */
-.main-entityHeader-container > div:not(.main-entityHeader-contentWrapper) {
+/* The page's own colour (playlist, album…, as in Spotify) tints the top of the page and fades into the glass: Spotify
+   sets it on the header's first layer, as a background colour (Liked Songs) or as an inline --background-base
+   (playlists, albums), and again on the band under the header. The header layer fades from the top, the band carries
+   the fade on to nothing; Spotify's gradients and other layers go. The colour fades in when it arrives or changes */
+.main-entityHeader-container > div:not(.main-entityHeader-contentWrapper, .main-entityHeader-backgroundColor) {
 	background: none !important;
 }
-.main-entityHeader-backgroundColor,
-.main-entityHeader-container > div:not(.main-entityHeader-contentWrapper):first-child {
-	background: linear-gradient(to bottom, color-mix(in srgb, var(--lm-accent) 18%, transparent), transparent) !important;
+.main-view-container {
+	--lm-hdr-top: 0.55;
+	--lm-hdr-mid: 0.22;
 }
-/* Spotify continues the playlist's own colour under the header and darkens the sticky top bar */
-.playlist-playlist-actionBarBackground-background,
+html[data-lm-theme="light"] .main-view-container {
+	--lm-hdr-top: 0.32;
+	--lm-hdr-mid: 0.12;
+}
+.main-entityHeader-backgroundColor {
+	background-image: none !important;
+	transition: background-color 0.8s ease, opacity 0.8s ease;
+	@starting-style {
+		opacity: 0;
+	}
+}
+.main-entityHeader-backgroundColor {
+	mask-image: linear-gradient(to bottom, rgb(0 0 0 / var(--lm-hdr-top)), rgb(0 0 0 / var(--lm-hdr-mid)));
+}
+.main-entityHeader-backgroundColor[style*="--background-base"] {
+	background-color: var(--background-base) !important;
+}
+/* the sticky top bar keeps the theme's material */
 .main-topBar-overlay {
 	background: none !important;
 }
@@ -863,9 +882,25 @@ html[data-cinema-npv-postEnter] .main-actionBar-ActionBarContainer {
    colour or as a gradient into it (a dark 232px band on Liked Songs). On artists without a banner photo that
    band sits inside the block, coloured inline with the artist's colour (a red band under the header); on some
    playlists it gets the colours as inline variables (--background-base…) and paints a gradient from them */
-.main-entityHeader-container ~ div,
-.main-entityHeader-container ~ div > div:empty:is([style*="background-color"], [style*="--background-base"]) {
+.main-entityHeader-container ~ div:not(.main-actionBarBackground-background),
+.main-entityHeader-container ~ div > div:empty:is([style*="background-color"], [style*="--background-base"]):not(.main-actionBarBackground-background),
+.main-entityHeader-container:not(:has(> .main-entityHeader-backgroundColor)) ~ * .main-actionBarBackground-background,
+.main-entityHeader-container:not(:has(> .main-entityHeader-backgroundColor)) ~ .main-actionBarBackground-background {
 	background: none !important;
+}
+/* …except the band under a coloured header, which carries the header's fade on to nothing (artists keep it off) */
+.main-entityHeader-container:has(> .main-entityHeader-backgroundColor) ~ .main-actionBarBackground-background,
+.main-entityHeader-container:has(> .main-entityHeader-backgroundColor) ~ div > .main-actionBarBackground-background {
+	background-image: none !important;
+	mask-image: linear-gradient(to bottom, rgb(0 0 0 / var(--lm-hdr-mid)), transparent);
+	transition: background-color 0.8s ease, opacity 0.8s ease;
+	@starting-style {
+		opacity: 0;
+	}
+}
+.main-entityHeader-container:has(> .main-entityHeader-backgroundColor) ~ .main-actionBarBackground-background[style*="--background-base"],
+.main-entityHeader-container:has(> .main-entityHeader-backgroundColor) ~ div > .main-actionBarBackground-background[style*="--background-base"] {
+	background-color: var(--background-base) !important;
 }
 /* Artist photo: its layers run ~30px past the header, which that opaque block used to hide — fade them out
    into the translucent content instead */
