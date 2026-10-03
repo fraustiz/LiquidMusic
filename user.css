@@ -858,12 +858,17 @@ html[data-lm-theme="light"] .main-view-container {
 	--lm-hdr-top: 0.32;
 	--lm-hdr-mid: 0.12;
 }
-.main-entityHeader-backgroundColor {
-	background-image: none !important;
-	transition: background-color 0.8s ease, opacity 0.8s ease;
-	@starting-style {
+/* An animation, not a starting style: on Spotify 1.3.3 the name arrives just after the element (from theme.js), and
+   an animation starts whenever its name applies */
+@keyframes lm-page-colour-in {
+	from {
 		opacity: 0;
 	}
+}
+.main-entityHeader-backgroundColor {
+	background-image: none !important;
+	transition: background-color 0.8s ease;
+	animation: lm-page-colour-in 0.8s ease backwards;
 }
 .main-entityHeader-backgroundColor {
 	mask-image: linear-gradient(to bottom, rgb(0 0 0 / var(--lm-hdr-top)), rgb(0 0 0 / var(--lm-hdr-mid)));
@@ -893,10 +898,8 @@ html[data-lm-theme="light"] .main-view-container {
 .main-entityHeader-container:has(> .main-entityHeader-backgroundColor) ~ div > .main-actionBarBackground-background {
 	background-image: none !important;
 	mask-image: linear-gradient(to bottom, rgb(0 0 0 / var(--lm-hdr-mid)), transparent);
-	transition: background-color 0.8s ease, opacity 0.8s ease;
-	@starting-style {
-		opacity: 0;
-	}
+	transition: background-color 0.8s ease;
+	animation: lm-page-colour-in 0.8s ease backwards;
 }
 .main-entityHeader-container:has(> .main-entityHeader-backgroundColor) ~ .main-actionBarBackground-background[style*="--background-base"],
 .main-entityHeader-container:has(> .main-entityHeader-backgroundColor) ~ div > .main-actionBarBackground-background[style*="--background-base"] {
