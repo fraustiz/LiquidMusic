@@ -336,6 +336,23 @@
 		["progress-bar", "[data-testid='progress-bar']"],
 	];
 
+	// Spotify 1.3.3 ships a second Now Playing panel, picked per install: [data-npv-root], a header floating over a
+	// scroll area that holds the artwork, the track info and the section cards. Spicetify's class map doesn't know
+	// it, so these hooks run even when the map covers the rest of Spotify. Only the names whose rules fit it.
+	const NPV_ROOT_HOOKS = [
+		["main-nowPlayingView-headerContainer", "[data-npv-root] > :first-child:not([data-overlayscrollbars])"],
+		["main-nowPlayingView-mainContainer", "[data-npv-root] > [data-overlayscrollbars]"],
+		["main-nowPlayingView-panel", "[data-npv-root] [data-overlayscrollbars-viewport] > :has(> * > [data-testid='cover-art-slot'])"],
+		// The artwork is styled through its cover-art-slot in user.css: Spotify's styles for coverArtContainer would
+		// turn the slot into a flex box with a 1s aspect-ratio transition.
+		// The row under the artwork with the title and artists (the cards below have an h2 title)
+		["main-nowPlayingView-contextItemInfo", "[data-npv-root] :has(> [data-testid='cover-art-slot']) + * > :has(a[href*='/artist/']):not(:has(h2))"],
+		// Not main-trackInfo-container on their column: Spotify's own styles for that name (the pill's grid) centred
+		// the title
+		["main-trackInfo-name", "[data-npv-root] .main-nowPlayingView-contextItemInfo > :first-child > :first-child"],
+		["main-trackInfo-artists", "[data-npv-root] .main-nowPlayingView-contextItemInfo > :first-child > :nth-child(2)"],
+	];
+
 	// Gives each element matched by a hook its class, when it doesn't already have it. Several passes, so hooks
 	// can build on classes added in the pass before. Returns how many classes were added.
 	function applyClassHooks(root, hooks) {
@@ -374,6 +391,7 @@
 
 	const helpers = {
 		CLASS_HOOKS,
+		NPV_ROOT_HOOKS,
 		applyClassHooks,
 		outermostNodes,
 		missingClassNames,
@@ -448,17 +466,14 @@
 	// The observer starts with the theme's script, before the extensions load: on each change it adds the names
 	// right away, in the same batch, so extensions that look for them as soon as an element appears (Quick Queue
 	// reads .main-trackList-trackListRow in new rows) find them. Once the main view exists it decides: with the map
-	// present the main view already carries its name, and the observer stops.
+	// present the main view already carries its name, and only the hooks for what the map doesn't know keep running.
 	function startClassHooks() {
 		let hooks = null;
 		const decide = () => {
 			const mainView = document.querySelector("#main-view, .Root__main-view");
 			if (!mainView || !document.body) return false;
-			if (mainView.classList.contains("Root__main-view")) {
-				hooks = [];
-				return true;
-			}
-			hooks = CLASS_HOOKS.filter(([name, selector]) => {
+			const translate = !mainView.classList.contains("Root__main-view");
+			hooks = (translate ? [...CLASS_HOOKS, ...NPV_ROOT_HOOKS] : NPV_ROOT_HOOKS).filter(([name, selector]) => {
 				try {
 					document.querySelector(selector);
 					return true;
@@ -467,7 +482,7 @@
 					return false;
 				}
 			});
-			root.dataset.lmClassHooks = "on";
+			if (translate) root.dataset.lmClassHooks = "on";
 			applyClassHooks(document.body, hooks);
 			return true;
 		};
@@ -493,13 +508,16 @@
 	const PAGE_SPECIFIC = /^(main-entityHeader|main-trackList|main-topBar|main-actionBar|playlist-|main-card|main-nowPlayingView-(canvas|aboutArtist))/;
 	window.LiquidMusic.hooks = () => {
 		const missing = missingClassNames(CLASS_HOOKS, (name) => !!document.querySelector("." + CSS.escape(name)));
+		// The [data-npv-root] Now Playing panel has no counterpart for some of the other panel's names
+		const npvRootNames = document.querySelector("[data-npv-root]") ? new Set(NPV_ROOT_HOOKS.map(([name]) => name)) : null;
+		const expected = (name) => !PAGE_SPECIFIC.test(name) && !(npvRootNames && name.startsWith("main-nowPlayingView-") && !npvRootNames.has(name));
 		const report = {
 			translator: root.dataset.lmClassHooks === "on" ? "on (restoring names)" : "off (Spicetify's class map covers this Spotify)",
 			page: Spicetify.Platform?.History?.location?.pathname ?? location.pathname,
 			// Expected on every page (with the right panel open): any name here is broken
-			missing: missing.filter((name) => !PAGE_SPECIFIC.test(name)),
-			// Page headers, track lists, cards, Canvas…: only a problem on a page that shows them
-			notOnThisPage: missing.filter((name) => PAGE_SPECIFIC.test(name)),
+			missing: missing.filter(expected),
+			// Page headers, track lists, cards, Canvas…: only a problem on a page (or Now Playing panel) that shows them
+			notOnThisPage: missing.filter((name) => !expected(name)),
 		};
 		console.info("[LiquidMusic]", report.missing.length ? `${report.missing.length} names missing` : "nothing missing", report);
 		return report;

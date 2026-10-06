@@ -321,7 +321,8 @@ body {
 .Root__nav-bar .main-yourLibraryX-libraryContainer,
 .Root__right-sidebar aside,
 .Root__right-sidebar aside::before,
-.Root__right-sidebar .main-nowPlayingView-container {
+.Root__right-sidebar .main-nowPlayingView-container,
+.Root__right-sidebar [data-npv-root] {
 	background: transparent !important;
 }
 
@@ -1200,19 +1201,22 @@ html[data-lm-page="home"] .main-view-container__scroll-node-child > main > div >
 	background: var(--lm-fill-2) !important;
 }
 
-/* Now Playing panel (right) */
-.main-nowPlayingView-coverArtContainer {
+/* Now Playing panel (right). In the [data-npv-root] panel the artwork's slot clips it (8px corners): the rounding
+   and the shadow go on the slot */
+.main-nowPlayingView-coverArtContainer,
+[data-npv-root] [data-testid="cover-art-slot"] {
 	border-radius: var(--lm-radius-art-hero);
 	box-shadow: var(--lm-art-shadow);
 }
-.main-nowPlayingView-coverArtContainer :is(img, .main-nowPlayingView-coverArt) {
+:is(.main-nowPlayingView-coverArtContainer, [data-npv-root] [data-testid="cover-art-slot"]) :is(img, .main-nowPlayingView-coverArt) {
 	border-radius: var(--lm-radius-art-hero) !important;
 }
 .main-nowPlayingView-contextItemInfo .main-trackInfo-name {
 	font-weight: 700;
 	letter-spacing: -0.012em;
 }
-.main-nowPlayingView-contextItemInfo .main-trackInfo-artists a {
+/* The [data-npv-root] panel's artist names are subdued spans inside the links */
+.main-nowPlayingView-contextItemInfo .main-trackInfo-artists :is(a, a [data-encore-id="text"]) {
 	color: var(--lm-accent) !important;
 }
 .main-nowPlayingView-section {
@@ -1228,6 +1232,11 @@ html[data-lm-page="home"] .main-view-container__scroll-node-child > main > div >
 }
 .main-nowPlayingView-section > .main-nowPlayingView-sectionHeader:first-child {
 	padding-left: 0 !important;
+}
+/* The [data-npv-root] panel draws its own cards (Credits, Next in queue) from these: same glass card */
+.main-nowPlayingView-panel {
+	--section-background-base: var(--lm-fill);
+	--section-border-radius: 14px;
 }
 /* "Connect to a device" is swapped into the Now Playing view and cross-faded over the old content; without
    Spotify's opaque backgrounds the old content showed through it. Hide it as soon as the device list is in. */
@@ -1278,12 +1287,10 @@ html[data-lm-page="home"] .main-view-container__scroll-node-child > main > div >
 	justify-content: center;
 }
 /* Spotify's scrolled header (opaque base colour, and a heavy shadow on the bar and on its container, which drew a
-   hard line under the title) stays off */
-.main-nowPlayingView-headerWrapper {
-	--background-base: transparent;
-}
+   hard line under the title) stays off. The [data-npv-root] panel animates both on its header itself */
 .main-nowPlayingView-headerContainer,
 .main-nowPlayingView-headerWrapper {
+	--background-base: transparent;
 	box-shadow: none !important;
 }
 /* Spicy Lyrics appends its lyrics card right under the artwork, inside the artwork's layer. Since Spotify 1.3.3 that
