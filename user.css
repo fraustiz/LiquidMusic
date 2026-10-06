@@ -1244,8 +1244,7 @@ html[data-lm-page="home"] .main-view-container__scroll-node-child > main > div >
 		--lm-scroll-edge: 104px;
 	}
 }
-/* Same for the Queue / Recently played panel: on macOS its list scrolls under the tabs, and the "Now playing"
-   heading showed through them */
+/* Same scroll-edge fade under the Queue / Recently played tabs */
 .main-nowPlayingView-mainContainer > [data-overlayscrollbars-viewport],
 .Root__right-sidebar aside:has(#queue-panel) [data-overlayscrollbars-viewport]:has(#queue-panel) {
 	mask-image: linear-gradient(to bottom, transparent calc(var(--lm-scroll-edge) * 0.6), #000 var(--lm-scroll-edge));
@@ -1255,17 +1254,19 @@ html[data-lm-page="home"] .main-view-container__scroll-node-child > main > div >
 }
 /* The header row names where the music plays from; with nothing to name (radio, autoplay) Spotify still reserved
    it, an empty band above the artwork. The row then floats over the panel (its hover buttons over the artwork)
-   and the artwork moves up, inset like its sides */
-.main-nowPlayingView-headerContainer:not(:has(.main-nowPlayingView-headerTextWrapper h1:not(:empty))) {
+   and the artwork moves up, inset like its sides. Scoped to .NowPlayingView: the other side panels are built from
+   the same component and Spicetify's class map gives them the same names, so the Queue / Recently played tab row
+   (no title either) floated over the list, its tabs turned into dark discs */
+.NowPlayingView .main-nowPlayingView-headerContainer:not(:has(.main-nowPlayingView-headerTextWrapper h1:not(:empty))) {
 	position: absolute;
 	inset: 0 0 auto;
 	z-index: 2;
 }
-.main-nowPlayingView-headerContainer:not(:has(.main-nowPlayingView-headerTextWrapper h1:not(:empty))) ~ .main-nowPlayingView-mainContainer .main-nowPlayingView-panel {
+.NowPlayingView .main-nowPlayingView-headerContainer:not(:has(.main-nowPlayingView-headerTextWrapper h1:not(:empty))) ~ .main-nowPlayingView-mainContainer .main-nowPlayingView-panel {
 	padding-top: 16px;
 }
 /* Its buttons then sit on the artwork: small glass discs keep them readable on any cover */
-.main-nowPlayingView-headerContainer:not(:has(.main-nowPlayingView-headerTextWrapper h1:not(:empty))) button {
+.NowPlayingView .main-nowPlayingView-headerContainer:not(:has(.main-nowPlayingView-headerTextWrapper h1:not(:empty))) button {
 	--text-subdued: #fff;
 	--text-base: #fff;
 	color: #fff;
