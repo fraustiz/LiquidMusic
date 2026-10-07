@@ -642,11 +642,23 @@
 		return typeof Spicetify.colorExtractor === "function" ? Spicetify.colorExtractor(item.uri) : null;
 	}
 
+	// The expanded Now Playing view shows the title and artists at its bottom left: user.css draws them from these
+	// variables, as CSS strings
+	function showTrackInfo(item) {
+		const cssString = (text) => `"${String(text).replace(/[\\"]/g, "\\$&").replace(/\s+/g, " ")}"`;
+		const artists = item?.artists?.map((artist) => artist.name).join(", ") || item?.metadata?.artist_name || "";
+		for (const [name, text] of [["--lm-track-name", item?.name], ["--lm-track-artists", artists]]) {
+			if (text) root.style.setProperty(name, cssString(text));
+			else root.style.removeProperty(name);
+		}
+	}
+
 	async function onSongChange() {
 		const request = ++state.request;
 		const item = currentItem();
 		const meta = item?.metadata || {};
 		const isAd = meta.is_advertisement === "true" || item?.type === "ad";
+		showTrackInfo(isAd ? null : item);
 		const imageUrl = isAd ? null : artworkUrl(meta.image_url);
 		state.hasImage = !!imageUrl;
 		loadBackdrop(imageUrl, request);
