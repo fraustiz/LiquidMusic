@@ -719,11 +719,63 @@ html[data-lm-theme="light"] .main-nowPlayingBar-nowPlayingBar::after {
    stays). The content fades out before the pill; Spotify already leaves room at the end of the scroll for its
    player row, so the last section still clears it (shortening the scroll area instead shrank the layout and
    pushed the sections over the artwork) */
+/* The fade before the pill is gone: it also faded the view's colours (the black band under the artwork) and hid
+   the title. Content scrolls under the pill as on the other pages */
 html[data-cinema-npv-postEnter] :fullscreen .Root__globalNav {
 	visibility: hidden;
 }
-html[data-cinema-npv-postEnter] .main-actionBar-ActionBarContainer > [data-overlayscrollbars-viewport] {
-	mask-image: linear-gradient(to bottom, #000 calc(100% - var(--lm-pill-h) - 88px), transparent calc(100% - var(--lm-pill-h) - 48px));
+/* The view's colours (the artwork's, set inline by Spotify on its first screen) only reach the first screen: below
+   it Spotify fades to its base colour, the theme's dark grey, which drew a solid band under the artwork. The colour
+   layer's last colour runs on down the view in a shadow (a shadow doesn't lengthen the scroll) and the sections
+   lose that fade */
+html[data-cinema-npv-postEnter] [style*="--cinema-mode-bg-color-from"] > :empty {
+	box-shadow: 0 500vh 0 500vh var(--cinema-mode-bg-color-to);
+}
+html[data-cinema-npv-postEnter] .Root__top-container > * > .main-actionBar-ActionBarContainer > [data-overlayscrollbars-viewport] > :not(:has([style*="--cinema-mode-bg-color-from"])) {
+	--background-base: transparent;
+}
+/* Spotify pulls the sections up to peek above its player row: next to the pill the first one sat in the title's
+   place. They start below the first screen */
+html[data-cinema-npv-postEnter] .Root__top-container > * > .main-actionBar-ActionBarContainer > [data-overlayscrollbars-viewport] > :not(:has([style*="--cinema-mode-bg-color-from"])) > [style*="translateY"] {
+	transform: none !important;
+}
+/* Spotify's player row showed the title and artists at its left end; the pill is centred, so they go back to the
+   bottom left of the first screen, beside it. theme.js puts them in these variables (a pseudo-element survives
+   Spotify's re-renders); the colours are the ones Spotify picks for the view's background */
+html[data-cinema-npv-postEnter] [style*="--cinema-mode-bg-color-from"]::before,
+html[data-cinema-npv-postEnter] [style*="--cinema-mode-bg-color-from"]::after {
+	position: absolute;
+	left: 48px;
+	max-inline-size: calc((100% - min(820px, 100% - 32px)) / 2 - 72px);
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+html[data-cinema-npv-postEnter] [style*="--cinema-mode-bg-color-from"]::before {
+	content: var(--lm-track-name, none);
+	bottom: 57px;
+	font-size: 24px;
+	font-weight: 700;
+	letter-spacing: -0.012em;
+	color: var(--text-base);
+}
+html[data-cinema-npv-postEnter] [style*="--cinema-mode-bg-color-from"]::after {
+	content: var(--lm-track-artists, none);
+	bottom: 40px;
+	font-size: 14px;
+	color: var(--text-subdued);
+}
+/* When the mouse rests Spotify hides its player and writes the title and artists there itself (its only text in
+   the first screen), fading them in after 1s. Ours sit in the same place with the same type and fade out on the
+   same beat, so the hand-over doesn't show and they never double up */
+@keyframes lm-cinema-info-out {
+	to {
+		opacity: 0;
+	}
+}
+html[data-cinema-npv-postEnter] [style*="--cinema-mode-bg-color-from"]:has([data-encore-id="text"])::before,
+html[data-cinema-npv-postEnter] [style*="--cinema-mode-bg-color-from"]:has([data-encore-id="text"])::after {
+	animation: lm-cinema-info-out 0.5s linear 1s forwards;
 }
 /* Spotify fills the gaps around the expanded view with a black outline (its app background): over the artwork
    backdrop that drew a black frame, and the toolbar's capsules overlapped its top edge. The view becomes a panel
@@ -733,6 +785,12 @@ html[data-cinema-npv-postEnter] :is(.main-actionBar-ActionBarContainer, :has(> .
 }
 html[data-cinema-npv-postEnter] .main-actionBar-ActionBarContainer {
 	border-radius: var(--lm-radius-panel) !important;
+}
+/* When the mouse rests a few seconds Spotify fades its player out and grows the view over the player's row with a
+   negative bottom margin (72px + the gap). The pill floats, so that row is empty here: the view ran past the bottom
+   of the window and took the title and artists with it. The view keeps its bottom edge; the fade stays Spotify's */
+html[data-cinema-npv-postEnter] .Root__top-container > :has(> .main-actionBar-ActionBarContainer) {
+	margin-bottom: 0 !important;
 }
 
 /* Narrow pill: drop secondary controls first so the LCD keeps room for the title */
