@@ -310,6 +310,12 @@ body {
 .Root__right-sidebar {
 	margin-top: var(--lm-gap);
 }
+/* The expanded Now Playing view takes the place of the three panels: flush under the toolbar, its top edge sat
+   under Windows' window buttons, which are a little taller than the toolbar. Not in full screen, where Spotify
+   pulls the view up over the toolbar's row with a margin of its own */
+.Root__top-container:not(:fullscreen *) > :has(> .main-actionBar-ActionBarContainer) {
+	margin-top: var(--lm-gap);
+}
 
 .Root__main-view {
 	background: var(--lm-bg-content) !important;
@@ -382,6 +388,11 @@ html.spotify__os--is-macos .main-globalNav-historyButtonsWrapper > * > :first-ch
 	height: 40px !important;
 	padding: 8px !important;
 	border-radius: 50% !important;
+}
+/* The avatar is 32px where the icons are 24px: with their padding it only had 24px, and the disc holding the
+   initial of an account without a photo was squeezed into an oval */
+[data-testid="user-widget-link"] {
+	padding: 0 !important;
 }
 .main-globalNav-searchContainer {
 	height: 40px !important;
