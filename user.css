@@ -1476,6 +1476,32 @@ html[data-lm-page="lyrics"] .Root__main-view,
 	--lyrics-color-messaging: var(--lm-label-2) !important;
 	background: transparent !important;
 }
+/* On some accounts (a Spotify experiment) the expanded Now Playing view shows the lyrics too. Without their flat
+   colour, what Spotify keeps behind them showed through: the view's artwork gradient, one screen tall, then the
+   panel's own colour once the lines had scrolled past it. Both step aside, as on the lyrics page */
+.main-actionBar-ActionBarContainer:has([style*="--lyrics-color-background"]) {
+	background: transparent !important;
+}
+[style*="--cinema-mode-bg-color"]:has(> [style*="--lyrics-color-background"]) > :empty {
+	background: none !important;
+}
+/* Spotify darkens the top of the view so its white buttons stay readable over the lines: on a clear view that
+   drew a hard-edged dark band. The lines fade out before they reach the buttons instead, as they do before the
+   pill, and the buttons take the theme's text colour (white would vanish on the light scheme) */
+:has(+ .main-actionBar-ActionBarContainer [style*="--lyrics-color-background"]) {
+	--header-text-color: var(--lm-label) !important;
+}
+:has(+ .main-actionBar-ActionBarContainer [style*="--lyrics-color-background"])::before {
+	background: none !important;
+}
+html[data-cinema-npv-postEnter] .main-actionBar-ActionBarContainer:has([style*="--lyrics-color-background"]) > [data-overlayscrollbars-viewport] {
+	mask-image: linear-gradient(to bottom, transparent 24px, #000 104px, #000 calc(100% - var(--lm-pill-h) - 88px), transparent calc(100% - var(--lm-pill-h) - 48px));
+}
+/* The view lies over the right panel, which Spotify keeps underneath, emptied: it would show through. It stays
+   when Spotify opens it beside the view (the queue, a device list) */
+html:not([data-right-sidebar-open-duringEnter], [data-right-sidebar-open-postEnter], [data-right-sidebar-open-preExit]) .Root__right-sidebar:has(~ * > .main-actionBar-ActionBarContainer [style*="--lyrics-color-background"]) {
+	visibility: hidden;
+}
 
 /* 9 · Motion ---------------------------------------------------------------- */
 
