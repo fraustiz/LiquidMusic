@@ -974,6 +974,10 @@ html[data-lm-page="home"] .main-view-container__scroll-node-child > main > div >
 	border-radius: var(--lm-radius-art-hero) !important;
 	box-shadow: var(--lm-art-shadow) !important;
 }
+/* A profile photo is a disc in Spotify: with the artwork's corners it became a rounded square */
+.main-entityHeader-container [data-testid="user-image"] img {
+	border-radius: 50% !important;
+}
 .main-entityHeader-title,
 .main-entityHeader-titleInner {
 	font-weight: 700 !important;

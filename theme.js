@@ -286,7 +286,9 @@
 		["main-entityHeader-backgroundColor", "[data-testid='entity-header'] > div:first-child:empty:is([style*='background-color'], [style*='--background-base'])"],
 		["main-entityHeader-overlay", ".main-entityHeader-backgroundColor + div:empty"],
 		["main-actionBarBackground-background", "[data-testid='entity-header'] ~ div:empty:is([style*='background-color'], [style*='--background-base']), [data-testid='entity-header'] ~ div > div:empty:first-child:is([style*='background-color'], [style*='--background-base'])"],
-		["main-entityHeader-imageContainer", ".main-entityHeader-contentWrapper [data-testid$='-image']"],
+		// Covers that open full size (album, podcast, episode, audiobook) are a button with no test id on Spotify
+		// 1.3.4. Only square artwork is one: round pictures (artist, profile) sit in a div
+		["main-entityHeader-imageContainer", ".main-entityHeader-contentWrapper [data-testid$='-image'], .main-entityHeader-contentWrapper > button:has(> * > img)"],
 		["main-entityHeader-image", ".main-entityHeader-imageContainer img"],
 		["main-entityHeader-title", "[data-testid='entityTitle'], [data-testid='adaptiveEntityTitle']"],
 		["main-entityHeader-titleInner", "[data-testid='entityTitle'] h1, [data-testid='adaptiveEntityTitle'] > *"],
