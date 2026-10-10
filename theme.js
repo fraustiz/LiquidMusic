@@ -316,12 +316,14 @@
 		["main-nowPlayingView-headerTextWrapper", ".main-nowPlayingView-headerWrapper > :has(> a)"],
 		["main-nowPlayingView-mainContainer", ".NowPlayingView > * > [data-overlayscrollbars]"],
 		["main-nowPlayingView-panel", "[data-testid='NPV_Panel_OpenDiv']"],
-		["main-nowPlayingView-nowPlayingGrid", ".main-nowPlayingView-panel > :first-child > *"],
+		// From the test id, not from the panel's name: the [data-npv-root] panel below has that name too, and its
+		// two columns are no grid and no section (the second one, taken for a card, got a background of its own)
+		["main-nowPlayingView-nowPlayingGrid", "[data-testid='NPV_Panel_OpenDiv'] > :first-child > *"],
 		["main-nowPlayingView-coverArtContainer", ".main-nowPlayingView-nowPlayingGrid [data-testid='track-visual-enhancement'] [data-testid='cover-drop-target']"],
 		["main-nowPlayingView-coverArt", ".main-nowPlayingView-coverArtContainer > *"],
 		["main-nowPlayingView-canvasVisualEnhancement", ".main-nowPlayingView-nowPlayingGrid :has(> * > .canvasVideoContainerNPV)"],
 		["main-nowPlayingView-contextItemInfo", ".main-nowPlayingView-nowPlayingGrid > :has([data-testid='minimized-track-visual-enhancement'])"],
-		["main-nowPlayingView-section", ".main-nowPlayingView-panel > :not(:first-child)"],
+		["main-nowPlayingView-section", "[data-testid='NPV_Panel_OpenDiv'] > :not(:first-child)"],
 		["main-nowPlayingView-sectionHeader", ".main-nowPlayingView-section :has(> h2)"],
 		["main-nowPlayingView-aboutArtist", ".main-nowPlayingView-section:has([style*='background-image'])"],
 		// Track title and artists, in the pill and in the Now Playing panel
@@ -342,11 +344,13 @@
 	const NPV_ROOT_HOOKS = [
 		["main-nowPlayingView-headerContainer", "[data-npv-root] > :first-child:not([data-overlayscrollbars])"],
 		["main-nowPlayingView-mainContainer", "[data-npv-root] > [data-overlayscrollbars]"],
-		["main-nowPlayingView-panel", "[data-npv-root] [data-overlayscrollbars-viewport] > :has(> * > [data-testid='cover-art-slot'])"],
+		// The scroll area's content. Found by position too: the artwork's slot only carries its test id while it shows
+		// the cover, so with a Canvas, a video or an ad in its place this name and the next one were lost
+		["main-nowPlayingView-panel", "[data-npv-root] [data-overlayscrollbars-viewport] > :has(> * > [data-testid='cover-art-slot']), [data-npv-root] > [data-overlayscrollbars] > [data-overlayscrollbars-viewport] > :only-child"],
 		// The artwork is styled through its cover-art-slot in user.css: Spotify's styles for coverArtContainer would
 		// turn the slot into a flex box with a 1s aspect-ratio transition.
 		// The row under the artwork with the title and artists (the cards below have an h2 title)
-		["main-nowPlayingView-contextItemInfo", "[data-npv-root] :has(> [data-testid='cover-art-slot']) + * > :has(a[href*='/artist/']):not(:has(h2))"],
+		["main-nowPlayingView-contextItemInfo", "[data-npv-root] :has(> [data-testid='cover-art-slot']) + * > :has(a[href*='/artist/']):not(:has(h2)), [data-npv-root] .main-nowPlayingView-panel > :first-child + * > :has(a[href*='/artist/']):not(:has(h2))"],
 		// Not main-trackInfo-container on their column: Spotify's own styles for that name (the pill's grid) centred
 		// the title
 		["main-trackInfo-name", "[data-npv-root] .main-nowPlayingView-contextItemInfo > :first-child > :first-child"],

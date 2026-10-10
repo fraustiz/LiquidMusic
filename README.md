@@ -90,7 +90,7 @@ its author.
 
 ## Compatibility
 
-Built and tested with Spicetify 2.45.1 and 2.45.3 and Spotify 1.3.0, 1.3.1 and 1.3.3 on Windows 11. macOS has its own
+Built and tested with Spicetify 2.45.1 and 2.45.3 and Spotify 1.3.0, 1.3.1, 1.3.3 and 1.3.4 on Windows 11. macOS has its own
 adjustments (room for the window buttons) but hasn't been tested on a Mac.
 
 Themes style Spotify through readable class names that Spicetify adds from its class map. When a Spotify update

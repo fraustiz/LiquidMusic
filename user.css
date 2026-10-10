@@ -1249,6 +1249,11 @@ html[data-lm-page="home"] .main-view-container__scroll-node-child > main > div >
 	--section-background-base: var(--lm-fill);
 	--section-border-radius: 14px;
 }
+/* Its lyrics preview (on accounts where Spotify shows one) takes its background from the lyrics' flat colour,
+   which section 8 clears: it was the only section without a card */
+[data-npv-root] [data-testid="lyrics-npv-section"] {
+	background: var(--lm-fill) !important;
+}
 /* "Connect to a device" is swapped into the Now Playing view and cross-faded over the old content; without
    Spotify's opaque backgrounds the old content showed through it. Hide it as soon as the device list is in. */
 .main-nowPlayingView-mainContainer:has([data-testid="device-picker-row-sidepanel"]) .main-nowPlayingView-panel {
@@ -1339,26 +1344,56 @@ html[data-lm-page="home"] .main-view-container__scroll-node-child > main > div >
 .main-nowPlayingView-aboutArtist [style*="url("] .main-nowPlayingView-sectionHeader * {
 	color: inherit !important;
 }
+[data-npv-root] [style*="url("] h2 {
+	color: #fff !important;
+}
 /* Spotify fades the track info into an opaque background over 280px (meant for Canvas videos), which ends in a
    hard edge over the glass */
 .main-nowPlayingView-contextItemInfo::before {
 	display: none !important;
 }
 /* The Canvas video's own overlays (which darken it behind the title) end on the opaque base colour: where the
-   video stops, across the first card, that band met the glass in a hard line. The video fades out instead */
-.main-nowPlayingView-canvasVisualEnhancement {
+   video stops, across the first card, that band met the glass in a hard line. The video fades out instead. The
+   [data-npv-root] panel plays it on one surface with its overlays, behind the header and the track info */
+.main-nowPlayingView-canvasVisualEnhancement,
+[data-npv-root] [data-canvas-surface] {
 	mask-image: linear-gradient(to bottom, #000 65%, transparent);
 }
 /* The track title sits on the video's darkened lower part: in light mode its dark text and dark accent links
    were unreadable there, so over a Canvas they stay light */
-html[data-lm-theme="light"] .main-nowPlayingView-nowPlayingGrid:has(.main-nowPlayingView-canvasVisualEnhancement video) .main-nowPlayingView-contextItemInfo {
+html[data-lm-theme="light"] :is(.main-nowPlayingView-nowPlayingGrid:has(.main-nowPlayingView-canvasVisualEnhancement video), [data-npv-root]:has([data-canvas-surface] :is(video, img))) .main-nowPlayingView-contextItemInfo {
 	--spice-text: #fff;
 	--text-base: #fff;
 	--text-subdued: rgba(255, 255, 255, 0.75);
 	color: #fff;
 }
-html[data-lm-theme="light"] .main-nowPlayingView-nowPlayingGrid:has(.main-nowPlayingView-canvasVisualEnhancement video) .main-nowPlayingView-contextItemInfo .main-trackInfo-artists a {
+html[data-lm-theme="light"] :is(.main-nowPlayingView-nowPlayingGrid:has(.main-nowPlayingView-canvasVisualEnhancement video), [data-npv-root]:has([data-canvas-surface] :is(video, img))) .main-nowPlayingView-contextItemInfo .main-trackInfo-artists :is(a, a [data-encore-id="text"]) {
 	color: rgba(255, 255, 255, 0.85) !important;
+}
+/* The [data-npv-root] panel's header floats over the video too: it is white while the video is under it, and takes
+   the text colour back as the panel scrolls (the content then fades out under it, the scroll-edge effect above) */
+@property --lm-npv-ink { syntax: "<color>"; inherits: true; initial-value: #fff; }
+@keyframes lm-npv-ink {
+	from {
+		--lm-npv-ink: #fff;
+	}
+	to {
+		--lm-npv-ink: var(--lm-label);
+	}
+}
+html[data-lm-theme="light"] [data-npv-root]:has([data-canvas-surface] :is(video, img)) {
+	timeline-scope: --lm-npv-scroll;
+}
+html[data-lm-theme="light"] [data-npv-root]:has([data-canvas-surface] :is(video, img)) .main-nowPlayingView-mainContainer > [data-overlayscrollbars-viewport] {
+	scroll-timeline: --lm-npv-scroll block;
+}
+html[data-lm-theme="light"] [data-npv-root]:has([data-canvas-surface] :is(video, img)) .main-nowPlayingView-headerContainer {
+	--text-base: var(--lm-npv-ink);
+	--text-subdued: var(--lm-npv-ink);
+	color: var(--lm-npv-ink);
+	animation: lm-npv-ink linear both;
+	animation-timeline: --lm-npv-scroll;
+	animation-range: 0 60px;
 }
 
 /* 7 · Menus & overlays ------------------------------------------------------ */
