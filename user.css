@@ -316,6 +316,12 @@ body {
 .Root__top-container:not(:fullscreen *) > :has(> .main-actionBar-ActionBarContainer) {
 	margin-top: var(--lm-gap);
 }
+/* Spotify keeps the right panel under that view, emptied, and when the mouse rests pulls it up over the toolbar's
+   row as it would the view: with the view held level with the panels, the panel's top showed above it, at the
+   right. It stays level too */
+html[data-cinema-npv-postEnter] .Root__top-container:not(:fullscreen *) > .Root__right-sidebar {
+	margin-top: var(--lm-gap) !important;
+}
 
 .Root__main-view {
 	background: var(--lm-bg-content) !important;
