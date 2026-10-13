@@ -347,6 +347,13 @@ html[data-cinema-npv-postEnter] .Root__top-container:not(:fullscreen *) > .Root_
 	backdrop-filter: blur(40px) saturate(180%);
 	box-shadow: 0 1px 0 var(--lm-separator);
 }
+/* While a track list's column header is stuck under the bar, one glass layer behind the two replaces the bar's
+   (see .main-trackList-trackListHeader) */
+.Root__main-view:has(.main-trackList-trackListHeader[data-lm-stuck]) .main-topBar-background {
+	background: none !important;
+	backdrop-filter: none;
+	box-shadow: none;
+}
 
 /* Toolbar: a transparent row where each group is its own glass capsule.
    Its search dropdown hangs down over the panels, so the toolbar layer sits above them (pill: 10, toasts: 20). */
@@ -1099,38 +1106,29 @@ html[data-lm-page="home"] #main-view main > div > div > :first-child:empty[style
 }
 /* Once stuck under the page's sticky bar, Spotify paints the column header with --background-highlight (a
    translucent fill here), so the rows showed through it: it takes the solid content colour.
-   Better, where the engine has scroll-driven animations: bar and header are one glass surface. Glass on each never
-   matched (each blurs only what is behind itself: a hovered row under the header lit it up next to a darker bar),
-   so nothing gets behind them instead. The rows are cut off at the header's lower edge as they scroll up, 64px
-   of bar and 37px of header from the top, and both show the same flat tint over the header's hairline: the
-   bar's own goes, and its blur leaves out the saturation boost, which a flat tint can't match. In the main view
-   only, where the header sticks at that height */
+   Better, with theme.js marking the header while it is stuck: the bar and the header are one glass surface. Glass
+   on each never matched (each blurs only what is behind itself: a hovered row under the header lit it up next to a
+   darker bar), so a single layer, the header's, reaches up behind the bar (64px), whose own glass steps aside.
+   The header's own stuck look goes with Spotify's mark, which comes and leaves late on a fast scroll: no
+   background, no line above it, and the hairline under it only while it carries the theme's mark */
 .main-trackList-trackListHeader {
 	--background-highlight: var(--lm-bg-content-solid);
 }
-@supports (animation-timeline: view()) {
-	.Root__main-view .main-trackList-trackListHeader {
-		--background-highlight: var(--lm-glass-thick-bg);
-		/* Spotify's line above the stuck header, which would cut the surface in two */
-		box-shadow: none !important;
-	}
-	.Root__main-view .main-trackList-trackListHeader ~ * {
-		animation: lm-rows-under-header linear both;
-		animation-timeline: view(block 101px 0px);
-		animation-range: exit-crossing 0% exit-crossing 100%;
-	}
-	.Root__main-view:has(.main-trackList-trackListHeader) .main-topBar-background {
-		backdrop-filter: blur(40px);
-		box-shadow: none;
-	}
+html[data-lm-stuck-headers] #main-view .main-trackList-trackListHeader {
+	--background-highlight: transparent;
+	border-bottom-color: transparent !important;
+	box-shadow: none !important;
 }
-@keyframes lm-rows-under-header {
-	from {
-		clip-path: inset(0);
-	}
-	to {
-		clip-path: inset(100% 0 0);
-	}
+html[data-lm-stuck-headers] #main-view .main-trackList-trackListHeader[data-lm-stuck] {
+	border-bottom-color: var(--lm-separator) !important;
+}
+#main-view .main-trackList-trackListHeader[data-lm-stuck] .main-trackList-trackListHeaderRow::before {
+	content: "";
+	position: absolute;
+	inset: -64px 0 0;
+	z-index: -1;
+	background: var(--lm-glass-thick-bg);
+	backdrop-filter: blur(40px) saturate(180%);
 }
 .main-trackList-rowImage {
 	border-radius: var(--lm-radius-art-sm) !important;

@@ -508,6 +508,27 @@
 	}
 	safe(startClassHooks);
 
+	// Marks a track list's column header while it is stuck under the page's sticky bar: user.css then draws one
+	// glass layer behind the two (see .main-trackList-trackListHeader). CSS can't tell the bar that the header is
+	// stuck, and Spotify's own mark, a class, comes late on a fast scroll: the header's background lingered after
+	// it had left. Checked as the page scrolls, once per frame: a few rectangles, nothing when they haven't changed.
+	function watchStuckListHeaders() {
+		let pending = 0;
+		const update = () => {
+			pending = 0;
+			const bar = document.querySelector("[data-testid='topbar']");
+			const edge = bar ? bar.getBoundingClientRect().bottom : null;
+			for (const header of document.querySelectorAll("#main-view .main-trackList-trackListHeader")) {
+				const stuck = edge !== null && Math.abs(header.getBoundingClientRect().top - edge) < 1;
+				if (stuck !== header.hasAttribute("data-lm-stuck")) header.toggleAttribute("data-lm-stuck", stuck);
+			}
+		};
+		// Scroll events don't bubble: caught on their way down, whichever page's list is scrolling
+		document.addEventListener("scroll", () => (pending ||= requestAnimationFrame(() => safe(update))), { capture: true, passive: true });
+		root.dataset.lmStuckHeaders = "on";
+	}
+	safe(watchStuckListHeaders);
+
 	// After a Spotify update, LiquidMusic.hooks() in the DevTools console lists the names the theme styles that are
 	// missing from the current page, i.e. what broke. Some only exist on some pages (track rows on playlists,
 	// cards on home) or with the right panel open: check a few pages.
