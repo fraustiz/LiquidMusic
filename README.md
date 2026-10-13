@@ -69,6 +69,18 @@ the theme's script.
 
 Change it with `spicetify config color_scheme dark`, then `spicetify apply`.
 
+## No glass?
+
+If the panels are flat and opaque and the artwork doesn't show behind them, check two things:
+
+- **Your system's transparency setting.** With *Transparency effects* turned off on Windows (Settings →
+  Personalization → Colors), or *Reduce transparency* turned on on macOS (System Settings → Accessibility →
+  Display), the theme follows the system and uses solid surfaces. A contrast theme does the same. Change the
+  setting and restart Spotify.
+- **The theme's script.** The artwork backdrop and the accent colour come from `theme.js`. After a manual install,
+  make sure `inject_theme_js` is on (see above). To check that it runs, type `LiquidMusic` in Spotify's DevTools
+  console (`spicetify enable-devtools`): `undefined` means it doesn't.
+
 ## Font
 
 The theme uses [Inter](https://rsms.me/inter/), loaded from Google Fonts when Spotify starts. If it can't load,
