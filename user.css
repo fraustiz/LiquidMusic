@@ -210,6 +210,7 @@ body {
 /* Regular glass — floating toolbar capsules and the player pill */
 .main-globalNav-historyButtons,
 .main-globalNav-link-icon,
+.custom-navlinks-scrollable_container,
 .main-globalNav-searchInputContainer::before,
 .main-globalNav-contentRight > .main-actionButtons,
 [data-testid="user-widget-link"],
@@ -226,6 +227,19 @@ body {
 		inset 0 1px 0 var(--lm-glass-highlight),
 		inset 0 0 0 var(--lm-edge-w) var(--lm-glass-edge),
 		var(--lm-glass-shadow) !important;
+}
+/* Custom apps' toolbar buttons (the Marketplace's cart…): Spicetify puts them in a scroll area with a fade
+   mask, which cuts a button's glass off from what is behind it (a grey disc where the other capsules take the
+   artwork's colours) and clips its shadow to the area's square, a faint box around the disc. The glass is on
+   the group instead (in the list above): one capsule for however many buttons, like the history buttons' */
+.custom-navlinks-scrollable_container {
+	border-radius: 999px;
+	overflow: hidden;
+}
+.custom-navlinks-scrollable_container .main-globalNav-link-icon {
+	background: none !important;
+	backdrop-filter: none;
+	box-shadow: none !important;
 }
 
 /* Thin glass — menus and tooltips (more opaque: they can open over anything, including other glass) */
@@ -1727,7 +1741,7 @@ html:not([data-right-sidebar-open-duringEnter], [data-right-sidebar-open-postEnt
 	.lm-backdrop-layer {
 		display: none;
 	}
-	:is(.Root__nav-bar, .Root__right-sidebar-peek, .main-nowPlayingBar-container, .main-globalNav-historyButtons, .main-globalNav-link-icon, .main-globalNav-searchInputContainer, .main-globalNav-contentRight > .main-actionButtons, [data-testid="user-widget-link"], [data-tippy-root], .main-topBar-background, .main-card-PlayButtonContainer [class*="button-primary__inner"], [class*="-legacy-tooltip"], [class*="-tooltip "], [class$="-tooltip"], .notistack-Snackbar [class*="legacy-box--elevated"]) {
+	:is(.Root__nav-bar, .Root__right-sidebar-peek, .main-nowPlayingBar-container, .main-globalNav-historyButtons, .main-globalNav-link-icon, .custom-navlinks-scrollable_container, .main-globalNav-searchInputContainer, .main-globalNav-contentRight > .main-actionButtons, [data-testid="user-widget-link"], [data-tippy-root], .main-topBar-background, .main-card-PlayButtonContainer [class*="button-primary__inner"], [class*="-legacy-tooltip"], [class*="-tooltip "], [class$="-tooltip"], .notistack-Snackbar [class*="legacy-box--elevated"]) {
 		backdrop-filter: none !important;
 	}
 }
