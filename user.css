@@ -834,6 +834,12 @@ html[data-cinema-npv-postEnter] .Root__top-container > :has(> .main-actionBar-Ac
 /* 6 · Components ------------------------------------------------------------ */
 
 /* Library */
+/* The Create button keeps Spotify's opaque elevated colour, a solid pill beside the translucent filter chips: it
+   takes their fill, through the variables its rest and hover states read */
+.YourLibraryX header {
+	--background-elevated-base: var(--lm-fill);
+	--background-elevated-highlight: var(--lm-fill-2);
+}
 /* Large title on the text only: the collapse icon's wrapper inherited the 28px line and dropped the icon
    onto its baseline, ~10px below the title's centre */
 .main-yourLibraryX-collapseButton button :is(h1, [class*="encore-text"]) {
