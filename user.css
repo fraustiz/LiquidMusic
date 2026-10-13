@@ -1579,8 +1579,17 @@ html[data-lm-page="lyrics"] .Root__main-view,
 .main-actionBar-ActionBarContainer:has([style*="--lyrics-color-background"]) {
 	background: transparent !important;
 }
+/* So does the colour the theme runs on below the first screen, a shadow of the same layer: behind the lines it
+   drew a block of colour from the second screen down */
 [style*="--cinema-mode-bg-color"]:has(> [style*="--lyrics-color-background"]) > :empty {
 	background: none !important;
+	box-shadow: none !important;
+}
+/* No title and artists at the bottom left either: they sat over the lines, and Spotify shows none with the
+   lyrics */
+[style*="--cinema-mode-bg-color"]:has(> [style*="--lyrics-color-background"])::before,
+[style*="--cinema-mode-bg-color"]:has(> [style*="--lyrics-color-background"])::after {
+	content: none !important;
 }
 /* Spotify darkens the top of the view so its white buttons stay readable over the lines: on a clear view that
    drew a hard-edged dark band. The lines fade out before they reach the buttons instead, as they do before the
