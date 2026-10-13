@@ -7,8 +7,9 @@ player, and an accent colour taken from whatever is playing.
 
 ## Features
 
-- **Glass everywhere.** The library, the side panel, the toolbar, menus and the search field are frosted glass
-  over a blurred copy of the current artwork, so the whole window takes on the colours of the song.
+- **Glass everywhere.** The library, the side panel, the toolbar, menus, the search field and the bars that stick
+  to the top of a page as it scrolls are frosted glass over a blurred copy of the current artwork, so the whole
+  window takes on the colours of the song.
 - **Colour from the artwork.** The accent (buttons, progress bar, highlights, links) is picked from the album cover
   and adjusted until it reads at 4.5:1 or better on the theme's surfaces. Panels thicken on busy covers so
   secondary text stays legible.
