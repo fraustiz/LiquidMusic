@@ -359,25 +359,98 @@
 		["main-trackInfo-artists", "[data-npv-root] .main-nowPlayingView-contextItemInfo > :first-child > :nth-child(2)"],
 	];
 
+	// Gives one element (not its subtree) the class of each hook that matches it, when it doesn't already have it.
+	// Returns how many classes were added.
+	function nameElement(el, hooks) {
+		let added = 0;
+		for (const [name, selector] of hooks) {
+			if (!el.classList.contains(name) && el.matches(selector)) {
+				el.classList.add(name);
+				added++;
+			}
+		}
+		return added;
+	}
+
 	// Gives each element matched by a hook its class, when it doesn't already have it. Several passes, so hooks
-	// can build on classes added in the pass before. Returns how many classes were added.
+	// can build on classes added in the pass before. One query per hook: over a whole page that measured about four
+	// times faster than a single query for the whole table. Returns how many classes were added.
 	function applyClassHooks(root, hooks) {
-		const combined = hooks.map(([, selector]) => selector).join(", ");
 		let added = 0;
 		for (let pass = 0; pass < 8; pass++) {
 			let addedThisPass = 0;
-			const targets = [...(root.matches?.(combined) ? [root] : []), ...(root.querySelectorAll?.(combined) ?? [])];
-			for (const el of targets) {
-				for (const [name, selector] of hooks) {
-					if (!el.classList.contains(name) && el.matches(selector)) {
-						el.classList.add(name);
-						addedThisPass++;
-					}
+			for (const [name, selector] of hooks) {
+				const matched = root.querySelectorAll?.(selector) ?? [];
+				for (const el of root.matches?.(selector) ? [root, ...matched] : matched) {
+					if (el.classList.contains(name)) continue;
+					el.classList.add(name);
+					addedThisPass++;
 				}
 			}
 			added += addedThisPass;
 			if (!addedThisPass) break;
 		}
+		return added;
+	}
+
+	// What following a page's changes needs from a hook table, worked out once: the names it adds (to tell when a
+	// re-render has dropped one) and the hooks that depend on an element's place among its siblings (:first-child,
+	// + …), the only ones a sibling coming or going can change for the elements already there.
+	function prepareClassHooks(hooks) {
+		const positional = hooks.filter(([, selector]) => /:(first|last|only|nth)-|[+~]/.test(selector));
+		return {
+			hooks,
+			names: new Set(hooks.map(([name]) => name)),
+			positional,
+			positionalSelector: positional.map(([, selector]) => selector).join(", "),
+		};
+	}
+
+	// Re-checks what a batch of changes (MutationObserver records) can have touched, not the whole subtree of every
+	// changed element: on a Spotify the class map doesn't cover, that rescanned a whole track list against the
+	// whole table for each row scrolled in and each row selected. Returns how many classes were added.
+	//  - an element whose class list lost one of the names (a React re-render resets it): itself
+	//  - the element children were added to or removed from: itself, and its children for the hooks that depend on
+	//    their position
+	//  - the elements added, and whichever of the above gained a name others may build on: with their subtree
+	function applyClassHooksToChanges(records, { hooks, names, positional, positionalSelector }) {
+		const reset = new Set();
+		const parents = new Set();
+		const subtrees = [];
+		for (const record of records) {
+			if (record.type === "childList") {
+				parents.add(record.target);
+				for (const node of record.addedNodes) if (node.nodeType === 1) subtrees.push(node);
+			} else if ((record.oldValue || "").split(/\s+/).some((name) => names.has(name) && !record.target.classList.contains(name))) {
+				reset.add(record.target);
+			}
+		}
+		let added = 0;
+		// The dropped names first, as the checks after them may build on them; several passes, as one of these
+		// elements may build on another
+		for (let pass = 0; pass < 8; pass++) {
+			let addedThisPass = 0;
+			for (const el of reset) if (el.isConnected) addedThisPass += nameElement(el, hooks);
+			added += addedThisPass;
+			if (!addedThisPass) break;
+		}
+		for (const parent of parents) {
+			if (!parent.isConnected || parent.nodeType !== 1) continue;
+			const gained = nameElement(parent, hooks);
+			added += gained;
+			if (gained) {
+				subtrees.push(parent);
+				continue;
+			}
+			if (!positional.length) continue;
+			for (const child of parent.children) {
+				if (!child.matches(positionalSelector)) continue;
+				const childGained = nameElement(child, positional);
+				added += childGained;
+				if (childGained) subtrees.push(child);
+			}
+		}
+		for (const node of outermostNodes(subtrees)) if (node.isConnected) added += applyClassHooks(node, hooks);
 		return added;
 	}
 
@@ -398,7 +471,10 @@
 	const helpers = {
 		CLASS_HOOKS,
 		NPV_ROOT_HOOKS,
+		nameElement,
 		applyClassHooks,
+		prepareClassHooks,
+		applyClassHooksToChanges,
 		outermostNodes,
 		missingClassNames,
 		resolveMode,
@@ -474,12 +550,12 @@
 	// reads .main-trackList-trackListRow in new rows) find them. Once the main view exists it decides: with the map
 	// present the main view already carries its name, and only the hooks for what the map doesn't know keep running.
 	function startClassHooks() {
-		let hooks = null;
+		let table = null;
 		const decide = () => {
 			const mainView = document.querySelector("#main-view, .Root__main-view");
 			if (!mainView || !document.body) return false;
 			const translate = !mainView.classList.contains("Root__main-view");
-			hooks = (translate ? [...CLASS_HOOKS, ...NPV_ROOT_HOOKS] : NPV_ROOT_HOOKS).filter(([name, selector]) => {
+			const hooks = (translate ? [...CLASS_HOOKS, ...NPV_ROOT_HOOKS] : NPV_ROOT_HOOKS).filter(([name, selector]) => {
 				try {
 					document.querySelector(selector);
 					return true;
@@ -488,22 +564,33 @@
 					return false;
 				}
 			});
+			table = prepareClassHooks(hooks);
 			if (translate) root.dataset.lmClassHooks = "on";
 			applyClassHooks(document.body, hooks);
 			return true;
 		};
+		// The changes are re-checked narrowly (see applyClassHooksToChanges). A name can also depend on something
+		// deeper or further along than those checks look: a pass over the whole page picks it up once the changes
+		// have stopped for half a second, at most every 2s so a part of the page that keeps changing doesn't keep
+		// it running.
+		let sweepTimer = 0;
+		let lastSweep = 0;
+		const sweepSoon = () => {
+			clearTimeout(sweepTimer);
+			sweepTimer = setTimeout(() => {
+				lastSweep = performance.now();
+				safe(() => applyClassHooks(document.body, table.hooks));
+			}, Math.max(500, 2000 - (performance.now() - lastSweep)));
+		};
 		const observer = new MutationObserver((records) => {
 			safe(() => {
-				if (hooks === null && !decide()) return;
-				if (!hooks.length) return observer.disconnect();
-				// Re-checked where the page changed: the subtree of each changed element (children added, or classes
-				// reset by a React re-render), the outermost ones only
-				for (const node of outermostNodes(records.map((record) => record.target))) {
-					if (node.isConnected) applyClassHooks(node, hooks);
-				}
+				if (table === null && !decide()) return;
+				if (!table.hooks.length) return observer.disconnect();
+				applyClassHooksToChanges(records, table);
+				if (records.some((record) => record.type === "childList")) sweepSoon();
 			});
 		});
-		observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
+		observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"], attributeOldValue: true });
 		safe(decide);
 	}
 	safe(startClassHooks);
