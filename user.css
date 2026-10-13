@@ -1011,6 +1011,17 @@ html[data-lm-theme="light"] .main-view-container {
 html[data-lm-page="home"] .main-view-container__scroll-node-child > main > div > div:first-child[style*="background-color"] {
 	background: linear-gradient(to bottom, color-mix(in srgb, var(--lm-accent) 18%, transparent), transparent) !important;
 }
+/* Home, once it scrolls: Spotify fades a flat band in behind the filter chips, the first shortcut's colour under a
+   60% black veil, the one solid block on the page. It becomes glass, like the panels beside it, over a hairline.
+   Found from #main-view, which Spotify keeps whether or not the class names are there */
+html[data-lm-page="home"] #main-view main > div > div > :first-child:empty[style*="--background-base"] {
+	background: var(--lm-glass-thick-bg) !important;
+	backdrop-filter: blur(40px) saturate(180%);
+	box-shadow: 0 1px 0 var(--lm-separator);
+}
+html[data-lm-page="home"] #main-view main > div > div > :first-child:empty[style*="--background-base"]::after {
+	background: none !important;
+}
 /* Header text: Spotify keeps it light for its coloured band. On the accent tint it follows the mode,
    except over an artist photo, which Spotify renders in .before-scroll-node (empty on every other page),
    the scroll node's previous sibling: there it stays light in both modes. */
