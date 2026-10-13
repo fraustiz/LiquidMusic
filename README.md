@@ -17,6 +17,8 @@ player, and an accent colour taken from whatever is playing.
 - **Floating player.** The playback bar becomes a pill with an LCD-style track display, floating at the bottom of
   the window whatever the size of the side panels. On narrow windows it drops secondary controls first, so the title
   always has room.
+- **Expanded Now Playing.** The full-window view keeps the artwork's colours from top to bottom, with the title and
+  artists beside the player.
 - **Light, dark or automatic.** The `auto` scheme follows your system setting and switches live.
 - **Accessibility.** Reduced motion, reduced transparency and increased contrast system settings are respected:
   animations calm down, and glass turns into solid surfaces.
@@ -91,15 +93,18 @@ its author.
 ## Compatibility
 
 Built and tested with Spicetify 2.45.1 and 2.45.3 and Spotify 1.3.0, 1.3.1, 1.3.3 and 1.3.4 on Windows 11. macOS has its own
-adjustments (room for the window buttons) but hasn't been tested on a Mac.
+adjustments (room for the window buttons) and has been checked with Spotify 1.3.3 and 1.3.4.
 
 Themes style Spotify through readable class names that Spicetify adds from its class map. When a Spotify update
 lands before Spicetify's map covers it (Spotify 1.3.3 renamed nearly every class), LiquidMusic restores the names it
-needs itself, from markers Spotify keeps between versions, so the theme keeps working in the meantime.
+needs itself, from markers Spotify keeps between versions, so the theme keeps working in the meantime. It follows
+the page as it changes and only re-checks what changed, so scrolling and selecting stay quick.
 
 Spotify changes its interface often; if something looks off after an update, please open an issue with a screenshot
 and your Spotify version. If you can, add what `LiquidMusic.hooks()` returns in Spotify's DevTools console
-(`spicetify enable-devtools`): it lists the parts of Spotify the theme no longer finds.
+(`spicetify enable-devtools`): it lists the parts of Spotify the theme no longer finds. The same goes if Spotify
+feels slower with the theme: the report's `translator` line tells whether the theme is restoring the names on your
+Spotify.
 
 ## Credits
 
