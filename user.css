@@ -338,28 +338,14 @@ html[data-cinema-npv-postEnter] .Root__top-container:not(:fullscreen *) > .Root_
 	background: transparent !important;
 }
 
-/* The sticky page header (title, play button) is glass, like the panels beside it, with enough blur that the rows
-   scrolling under it don't read through the title: a nearly opaque bar was a dark block on a colourful cover.
-   iOS bar edge: a hairline, not a fade — a faded edge showed a strip of rows between the bar and a stuck column
-   header.
-   The blur sits on a layer taller than the bar and cut back to it. A track list's column header sticks right
-   under the bar with glass of its own (see .main-trackList-trackListHeader), and two glass layers side by side
-   only match when each also blurs what is behind the other: a hovered row under the header lit it up next to a
-   darker bar. The bar goes above that header (z-index 2), whose layer would otherwise blur the bar's title */
-[data-testid="topbar"] {
-	z-index: 3 !important;
-}
+/* The sticky page header (title, play button) is glass, like the panels beside it, with enough blur that what
+   scrolls under it doesn't read through the title: a nearly opaque bar was a dark block on a colourful cover.
+   iOS bar edge: a hairline, not a fade (a faded edge showed a strip of rows between the bar and a stuck column
+   header) */
 .main-topBar-background {
 	background: var(--lm-glass-thick-bg) !important;
-	box-shadow: 0 1px 0 var(--lm-separator);
-}
-.main-topBar-background::before {
-	content: "";
-	position: absolute;
-	inset: 0 0 -80px;
-	z-index: -1;
 	backdrop-filter: blur(40px) saturate(180%);
-	clip-path: inset(0 0 80px);
+	box-shadow: 0 1px 0 var(--lm-separator);
 }
 
 /* Toolbar: a transparent row where each group is its own glass capsule.
@@ -1112,28 +1098,38 @@ html[data-lm-page="home"] #main-view main > div > div > :first-child:empty[style
 	border-bottom-color: var(--lm-separator) !important;
 }
 /* Once stuck under the page's sticky bar, Spotify paints the column header with --background-highlight (a
-   translucent fill here), so the rows showed through it. It is glass like the bar it sits under, on a layer that
-   only exists while the header is stuck: a backdrop filter applies even without a background, and tinted a
-   rectangle behind the header at rest. Like the bar's, the layer blurs a taller area than it shows, so the two read
-   as one surface. Where the engine can't tell that the header is stuck, it keeps the solid content colour */
+   translucent fill here), so the rows showed through it: it takes the solid content colour.
+   Better, where the engine has scroll-driven animations: bar and header are one glass surface. Glass on each never
+   matched (each blurs only what is behind itself: a hovered row under the header lit it up next to a darker bar),
+   so nothing gets behind them instead. The rows are cut off at the header's lower edge as they scroll up, 64px
+   of bar and 37px of header from the top, and both show the same flat tint over the header's hairline: the
+   bar's own goes, and its blur leaves out the saturation boost, which a flat tint can't match. In the main view
+   only, where the header sticks at that height */
 .main-trackList-trackListHeader {
 	--background-highlight: var(--lm-bg-content-solid);
 }
-@supports (container-type: scroll-state) {
-	.main-trackList-trackListHeader {
-		--background-highlight: transparent;
-		container-type: scroll-state;
+@supports (animation-timeline: view()) {
+	.Root__main-view .main-trackList-trackListHeader {
+		--background-highlight: var(--lm-glass-thick-bg);
+		/* Spotify's line above the stuck header, which would cut the surface in two */
+		box-shadow: none !important;
 	}
-	@container scroll-state(stuck: top) {
-		.main-trackList-trackListHeaderRow::before {
-			content: "";
-			position: absolute;
-			inset: -80px 0 0;
-			z-index: -1;
-			background: var(--lm-glass-thick-bg);
-			backdrop-filter: blur(40px) saturate(180%);
-			clip-path: inset(80px 0 0);
-		}
+	.Root__main-view .main-trackList-trackListHeader ~ * {
+		animation: lm-rows-under-header linear both;
+		animation-timeline: view(block 101px 0px);
+		animation-range: exit-crossing 0% exit-crossing 100%;
+	}
+	.Root__main-view:has(.main-trackList-trackListHeader) .main-topBar-background {
+		backdrop-filter: blur(40px);
+		box-shadow: none;
+	}
+}
+@keyframes lm-rows-under-header {
+	from {
+		clip-path: inset(0);
+	}
+	to {
+		clip-path: inset(100% 0 0);
 	}
 }
 .main-trackList-rowImage {
