@@ -228,6 +228,34 @@
 	// and the theme falls apart. Each hook finds the same element through markers Spotify keeps between versions
 	// (ids, data-testid, structure) and gives it back its name. Order matters: a hook may build on names added by
 	// the hooks above it.
+	// The player pill, re-gridded by user.css: one name missing and its part falls out of the grid (without
+	// main-nowPlayingBar-left the artwork and titles dropped under the pill, full size). Spicetify's class map can
+	// cover the rest of a Spotify build and not these, so they run even when the map is present (see startClassHooks).
+	// Only the pill's own elements: the track info names are shared with the Now Playing panel.
+	const PILL_HOOKS = [
+		["Root__now-playing-bar", ":has(> [data-testid='now-playing-bar'])"],
+		["main-nowPlayingBar-container", "[data-testid='now-playing-bar']"],
+		["main-nowPlayingBar-nowPlayingBar", "[data-testid='now-playing-bar'] > :has([data-testid='player-controls'])"],
+		["main-nowPlayingBar-left", ".main-nowPlayingBar-nowPlayingBar > :has([data-testid='now-playing-widget'])"],
+		["main-nowPlayingBar-center", ".main-nowPlayingBar-nowPlayingBar > :has([data-testid='player-controls'])"],
+		["main-nowPlayingBar-right", ".main-nowPlayingBar-nowPlayingBar > :has([data-testid='volume-bar'], [data-testid='control-button-queue'])"],
+		["main-nowPlayingBar-extraControls", ".main-nowPlayingBar-right > *"],
+		["main-nowPlayingBar-volumeBar", "[data-testid='volume-bar']"],
+		["main-nowPlayingWidget-nowPlaying", "[data-testid='now-playing-widget']"],
+		["main-coverSlotCollapsed-container", "[data-testid='CoverSlotCollapsed__container']"],
+		["main-nowPlayingWidget-coverArt", ":has(> [data-testid='cover-art-button'])"],
+		["main-nowPlayingWidget-coverArtContainer", "[data-testid='cover-art-button']"],
+		["main-trackInfo-container", "[data-testid='now-playing-widget'] > [data-testid='CoverSlotCollapsed__container'] + *"],
+		["main-trackInfo-name", ".main-nowPlayingWidget-nowPlaying .main-trackInfo-container > :first-child"],
+		["main-trackInfo-artists", ".main-nowPlayingWidget-nowPlaying .main-trackInfo-container > :nth-child(3)"],
+		["main-nowPlayingWidget-actionButtonWrapper", "[data-testid='now-playing-widget'] > :last-child:has(button)"],
+		["player-controls", "[data-testid='player-controls']"],
+		["player-controls__buttons", "[data-testid='general-controls']"],
+		["player-controls__left", "[data-testid='general-controls'] > :first-child"],
+		["playback-bar", "[data-testid='player-controls'] > :has([data-testid='playback-position'])"],
+		["progress-bar", "[data-testid='now-playing-bar'] [data-testid='progress-bar']"],
+	];
+
 	const CLASS_HOOKS = [
 		// Layout
 		["Root__top-container", ".Root > :has(> #main-view)"],
@@ -239,7 +267,6 @@
 		["Root__right-sidebar-overlayWrapper", ".Root__right-sidebar-peek > *"],
 		["Root__right-sidebar-peekContent", ".Root__right-sidebar-overlayWrapper > :has(aside)"],
 		["main-nowPlayingView-container", ":has(> .NowPlayingView)"],
-		["Root__now-playing-bar", ":has(> [data-testid='now-playing-bar'])"],
 		// Library (left). Its row images get no hook: artists' round images can't be told from square ones
 		["main-navBar-mainNav", ".Root__nav-bar > nav"],
 		["main-yourLibraryX-library", ".Root__nav-bar > nav > :has(.YourLibraryX)"],
@@ -261,18 +288,7 @@
 		// Not styled by the theme: Spicetify only adds extensions' top-bar buttons (Spicetify.Topbar) once it finds
 		// this button to copy its look from. Friend activity, or the group's last icon when it's turned off
 		["main-globalNav-buddyFeed", ".main-actionButtons > button[data-restore-focus-key='buddy_feed'], .main-actionButtons:not(:has(> [data-restore-focus-key='buddy_feed'])) > button[data-encore-id='buttonTertiary']:last-of-type"],
-		// Player pill
-		["main-nowPlayingBar-container", "[data-testid='now-playing-bar']"],
-		["main-nowPlayingBar-nowPlayingBar", "[data-testid='now-playing-bar'] > :has([data-testid='player-controls'])"],
-		["main-nowPlayingBar-left", ".main-nowPlayingBar-nowPlayingBar > :has([data-testid='now-playing-widget'])"],
-		["main-nowPlayingBar-center", ".main-nowPlayingBar-nowPlayingBar > :has([data-testid='player-controls'])"],
-		["main-nowPlayingBar-right", ".main-nowPlayingBar-nowPlayingBar > :has([data-testid='volume-bar'], [data-testid='control-button-queue'])"],
-		["main-nowPlayingBar-extraControls", ".main-nowPlayingBar-right > *"],
-		["main-nowPlayingBar-volumeBar", "[data-testid='volume-bar']"],
-		["main-nowPlayingWidget-nowPlaying", "[data-testid='now-playing-widget']"],
-		["main-coverSlotCollapsed-container", "[data-testid='CoverSlotCollapsed__container']"],
-		["main-nowPlayingWidget-coverArt", ":has(> [data-testid='cover-art-button'])"],
-		["main-nowPlayingWidget-coverArtContainer", "[data-testid='cover-art-button']"],
+		...PILL_HOOKS,
 		// Pages: sticky top bar, header (playlist, album, artist…), action bar, track list
 		["main-topBar-background", "[data-testid='topbar'] > :first-child"],
 		// Not styled by the theme: the Marketplace mounts its tab bar (Extensions, Themes…) into this wrapper and
@@ -332,11 +348,6 @@
 		["main-trackInfo-container", "[data-testid='now-playing-widget'] > [data-testid='CoverSlotCollapsed__container'] + *, .main-nowPlayingView-contextItemInfo > [data-testid='minimized-track-visual-enhancement'] + *"],
 		["main-trackInfo-name", ".main-trackInfo-container > :first-child"],
 		["main-trackInfo-artists", ".main-nowPlayingWidget-nowPlaying .main-trackInfo-container > :nth-child(3), .main-nowPlayingView-contextItemInfo .main-trackInfo-container > :nth-child(2)"],
-		["main-nowPlayingWidget-actionButtonWrapper", "[data-testid='now-playing-widget'] > :last-child:has(button)"],
-		["player-controls", "[data-testid='player-controls']"],
-		["player-controls__buttons", "[data-testid='general-controls']"],
-		["player-controls__left", "[data-testid='general-controls'] > :first-child"],
-		["playback-bar", "[data-testid='player-controls'] > :has([data-testid='playback-position'])"],
 		["progress-bar", "[data-testid='progress-bar']"],
 	];
 
@@ -396,6 +407,7 @@
 	}
 
 	const helpers = {
+		PILL_HOOKS,
 		CLASS_HOOKS,
 		NPV_ROOT_HOOKS,
 		applyClassHooks,
@@ -472,14 +484,15 @@
 	// The observer starts with the theme's script, before the extensions load: on each change it adds the names
 	// right away, in the same batch, so extensions that look for them as soon as an element appears (Quick Queue
 	// reads .main-trackList-trackListRow in new rows) find them. Once the main view exists it decides: with the map
-	// present the main view already carries its name, and only the hooks for what the map doesn't know keep running.
+	// present the main view already carries its name, and only the hooks for what the map may miss (the pill, the
+	// [data-npv-root] panel) keep running.
 	function startClassHooks() {
 		let hooks = null;
 		const decide = () => {
 			const mainView = document.querySelector("#main-view, .Root__main-view");
 			if (!mainView || !document.body) return false;
 			const translate = !mainView.classList.contains("Root__main-view");
-			hooks = (translate ? [...CLASS_HOOKS, ...NPV_ROOT_HOOKS] : NPV_ROOT_HOOKS).filter(([name, selector]) => {
+			hooks = (translate ? [...CLASS_HOOKS, ...NPV_ROOT_HOOKS] : [...PILL_HOOKS, ...NPV_ROOT_HOOKS]).filter(([name, selector]) => {
 				try {
 					document.querySelector(selector);
 					return true;
