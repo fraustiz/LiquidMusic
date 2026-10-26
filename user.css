@@ -609,6 +609,10 @@ html[data-lm-theme="light"] .main-nowPlayingBar-nowPlayingBar::after {
 	height: 100% !important;
 	padding: 0 8px !important;
 }
+/* Spotify 1.3.6 wraps the widget in one more div: it fills the LCD too, or the widget kept its own height at the top */
+.main-nowPlayingBar-left > :has(> .main-nowPlayingWidget-nowPlaying) {
+	height: 100%;
+}
 .main-nowPlayingBar-left .main-nowPlayingWidget-nowPlaying {
 	height: 100%;
 	align-items: center;
