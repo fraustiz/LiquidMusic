@@ -349,7 +349,7 @@
 		// Track title and artists, in the pill and in the Now Playing panel
 		["main-trackInfo-container", "[data-testid='now-playing-widget'] > [data-testid='CoverSlotCollapsed__container'] + *, .main-nowPlayingView-contextItemInfo > [data-testid='minimized-track-visual-enhancement'] + *"],
 		["main-trackInfo-name", ".main-trackInfo-container > :first-child"],
-		["main-trackInfo-artists", ".main-nowPlayingWidget-nowPlaying .main-trackInfo-container > :nth-child(3), .main-nowPlayingView-contextItemInfo .main-trackInfo-container > :nth-child(2)"],
+		["main-trackInfo-artists", "[data-testid='now-playing-widget'] .main-trackInfo-container > :nth-child(3), .main-nowPlayingView-contextItemInfo .main-trackInfo-container > :nth-child(2)"],
 		["progress-bar", "[data-testid='progress-bar']"],
 	];
 
