@@ -10,6 +10,16 @@ player, and an accent colour taken from whatever is playing.
 - **Glass everywhere.** The library, the side panel, the toolbar, menus, the search field and the bars that stick
   to the top of a page as it scrolls are frosted glass over a blurred copy of the current artwork, so the whole
   window takes on the colours of the song.
+- **Background and panels, your choice.** Two settings in your profile menu in Spotify, each kept as it was by
+  default:
+  - **LiquidMusic background**: *Blurred artwork* (default), *Kawarp* or *Kawarp, animated*.
+    [Kawarp](https://github.com/better-lyrics/kawarp) draws the artwork with WebGL, Kawase blur and domain warping,
+    the same fluid look as Spicy Lyrics. Animated, it flows with the song's tempo, loudness and beats; paused, or
+    with reduced motion, it only drifts slowly, and it stops when the window is hidden. Without WebGL the theme
+    falls back to the blurred artwork.
+  - **LiquidMusic panels**: *Frosted glass* (default) or *Clear, like Spicy Lyrics*: the library, the page and the
+    side panel let the background through untinted, graded like Spicy Lyrics' Now Playing card (darkened in dark
+    mode, lifted toward white in light mode). Sticky bars keep their glass.
 - **Colour from the artwork.** The accent (buttons, progress bar, highlights, links) is picked from the album cover
   and adjusted until it reads at 4.5:1 or better on the theme's surfaces. Panels thicken on busy covers so
   secondary text stays legible.
