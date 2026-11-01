@@ -198,6 +198,77 @@ body {
 	opacity: 1;
 	transform: scale(1.3);
 }
+/* Kawarp (WebGL) draws the backdrop when it is picked in the profile menu (LiquidMusic background) and theme.js
+   could load it; otherwise, and by default, the blurred layers above do */
+.lm-backdrop-canvas {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	display: none;
+}
+#lm-backdrop.lm-kawarp .lm-backdrop-canvas {
+	display: block;
+	/* Spicy Lyrics' grade for its lyrics page. In dark mode it darkens enough on its own: no scrim on top */
+	filter: saturate(2.5) brightness(0.65);
+}
+html[data-lm-theme="light"] #lm-backdrop.lm-kawarp .lm-backdrop-canvas {
+	filter: saturate(2.5);
+}
+html:not([data-lm-theme="light"]) #lm-backdrop.lm-kawarp::after {
+	display: none;
+}
+#lm-backdrop.lm-kawarp .lm-backdrop-layer {
+	display: none;
+}
+
+/* Clear panels (LiquidMusic panels → clear, in the profile menu; frosted glass is the default): the large panels
+   are clear like Spicy Lyrics' Now Playing card, and the backdrop shows through them as it is, with no tint or
+   blur of their own (theme.js measures the accent against it). It takes that card's grade instead of the scrim:
+   darkened in dark mode, and on the light scheme its mirror, as vivid but lifted toward white (each channel
+   0.68 × c + 0.51, so black text keeps about 5:1 on the darkest artwork). The sticky bars keep their glass, which
+   hides what scrolls under them. Not under reduced transparency or increased contrast, where the panels stay solid */
+@media (prefers-reduced-transparency: no-preference) and (prefers-contrast: no-preference) {
+	html[data-lm-panels="clear"] #lm-backdrop::after {
+		display: none;
+	}
+	html[data-lm-panels="clear"] #lm-backdrop.lm-kawarp .lm-backdrop-canvas {
+		filter: brightness(0.6) saturate(2.65);
+	}
+	html[data-lm-panels="clear"] .lm-backdrop-layer {
+		filter: blur(80px) brightness(0.6) saturate(2.65);
+	}
+	html[data-lm-panels="clear"][data-lm-theme="light"] #lm-backdrop.lm-kawarp .lm-backdrop-canvas {
+		filter: saturate(2.65) contrast(0.4) brightness(1.7);
+	}
+	html[data-lm-panels="clear"][data-lm-theme="light"] .lm-backdrop-layer {
+		filter: blur(80px) saturate(2.65) contrast(0.4) brightness(1.7);
+	}
+	html[data-lm-panels="clear"] :is(.Root__nav-bar, .Root__right-sidebar-peek, .Root__main-view) {
+		background: transparent !important;
+		backdrop-filter: none;
+	}
+}
+
+/* Spicy Lyrics paints the Now Playing panel with its own dark Kawarp whatever the mode: on the light scheme that
+   panel keeps the dark scheme's text, or the title, artists and section headings were black on dark */
+html[data-lm-theme="light"] .Root__right-sidebar aside.spicy-dynamic-bg-in-this,
+html[data-lm-theme="light"] .Root__right-sidebar aside.spicy-dynamic-bg-in-this :is(.encore-base-set, .encore-dark-theme, .encore-light-theme) {
+	color-scheme: dark;
+	--lm-label: #fff;
+	--lm-label-2: rgba(235, 235, 245, 0.6);
+	--lm-label-3: rgba(235, 235, 245, 0.3);
+	--lm-separator: rgba(84, 84, 88, 0.6);
+	--lm-fill: rgba(120, 120, 128, 0.18);
+	--lm-fill-2: rgba(120, 120, 128, 0.28);
+	--text-base: #fff;
+	--text-subdued: rgba(235, 235, 245, 0.6);
+	--essential-base: #fff;
+	--essential-subdued: rgba(235, 235, 245, 0.3);
+	--decorative-base: #fff;
+	--decorative-subdued: rgba(84, 84, 88, 0.6);
+	color: #fff;
+}
 
 /* Thick glass — large side panels */
 .Root__nav-bar,
@@ -774,12 +845,12 @@ html[data-cinema-npv-postEnter] :fullscreen .Root__globalNav {
 html[data-cinema-npv-postEnter] [style*="--cinema-mode-bg-color-from"] > :empty {
 	box-shadow: 0 500vh 0 500vh var(--cinema-mode-bg-color-to);
 }
-html[data-cinema-npv-postEnter] .Root__top-container > * > .main-actionBar-ActionBarContainer > [data-overlayscrollbars-viewport] > :not(:has([style*="--cinema-mode-bg-color-from"])) {
+html[data-cinema-npv-postEnter] .Root__top-container > * > .main-actionBar-ActionBarContainer > [data-overlayscrollbars-viewport] > :not([data-lm-view-colours]) {
 	--background-base: transparent;
 }
 /* Spotify pulls the sections up to peek above its player row: next to the pill the first one sat in the title's
    place. They start below the first screen */
-html[data-cinema-npv-postEnter] .Root__top-container > * > .main-actionBar-ActionBarContainer > [data-overlayscrollbars-viewport] > :not(:has([style*="--cinema-mode-bg-color-from"])) > [style*="translateY"] {
+html[data-cinema-npv-postEnter] .Root__top-container > * > .main-actionBar-ActionBarContainer > [data-overlayscrollbars-viewport] > :not([data-lm-view-colours]) > [style*="translateY"] {
 	transform: none !important;
 }
 /* Spotify's player row showed the title and artists at its left end; the pill is centred, so they go back to the
@@ -1641,39 +1712,41 @@ html[data-lm-page="lyrics"] .Root__main-view,
 	--lyrics-color-messaging: var(--lm-label-2) !important;
 	background: transparent !important;
 }
-/* On some accounts (a Spotify experiment) the expanded Now Playing view shows the lyrics too. Without their flat
+/* The data-lm-* marks below are set by theme.js (markLyricsViews): an inline-style test inside :has() made Chrome
+   restyle the whole page whenever any element's style changed (issue #8).
+   On some accounts (a Spotify experiment) the expanded Now Playing view shows the lyrics too. Without their flat
    colour, what Spotify keeps behind them showed through: the view's artwork gradient, one screen tall, then the
    panel's own colour once the lines had scrolled past it. Both step aside, as on the lyrics page */
-.main-actionBar-ActionBarContainer:has([style*="--lyrics-color-background"]) {
+.main-actionBar-ActionBarContainer[data-lm-lyrics] {
 	background: transparent !important;
 }
 /* So does the colour the theme runs on below the first screen, a shadow of the same layer: behind the lines it
    drew a block of colour from the second screen down */
-[style*="--cinema-mode-bg-color"]:has(> [style*="--lyrics-color-background"]) > :empty {
+[data-lm-lyrics-host] > :empty {
 	background: none !important;
 	box-shadow: none !important;
 }
 /* No title and artists at the bottom left either: they sat over the lines, and Spotify shows none with the
    lyrics */
-[style*="--cinema-mode-bg-color"]:has(> [style*="--lyrics-color-background"])::before,
-[style*="--cinema-mode-bg-color"]:has(> [style*="--lyrics-color-background"])::after {
+[data-lm-lyrics-host]::before,
+[data-lm-lyrics-host]::after {
 	content: none !important;
 }
 /* Spotify darkens the top of the view so its white buttons stay readable over the lines: on a clear view that
    drew a hard-edged dark band. The lines fade out before they reach the buttons instead, as they do before the
    pill, and the buttons take the theme's text colour (white would vanish on the light scheme) */
-:has(+ .main-actionBar-ActionBarContainer [style*="--lyrics-color-background"]) {
+[data-lm-before-lyrics] {
 	--header-text-color: var(--lm-label) !important;
 }
-:has(+ .main-actionBar-ActionBarContainer [style*="--lyrics-color-background"])::before {
+[data-lm-before-lyrics]::before {
 	background: none !important;
 }
-html[data-cinema-npv-postEnter] .main-actionBar-ActionBarContainer:has([style*="--lyrics-color-background"]) > [data-overlayscrollbars-viewport] {
+html[data-cinema-npv-postEnter] .main-actionBar-ActionBarContainer[data-lm-lyrics] > [data-overlayscrollbars-viewport] {
 	mask-image: linear-gradient(to bottom, transparent 24px, #000 104px, #000 calc(100% - var(--lm-pill-h) - 88px), transparent calc(100% - var(--lm-pill-h) - 48px));
 }
 /* The view lies over the right panel, which Spotify keeps underneath, emptied: it would show through. It stays
    when Spotify opens it beside the view (the queue, a device list) */
-html:not([data-right-sidebar-open-duringEnter], [data-right-sidebar-open-postEnter], [data-right-sidebar-open-preExit]) .Root__right-sidebar:has(~ * > .main-actionBar-ActionBarContainer [style*="--lyrics-color-background"]) {
+html[data-lm-lyrics-view]:not([data-right-sidebar-open-duringEnter], [data-right-sidebar-open-postEnter], [data-right-sidebar-open-preExit]) .Root__right-sidebar {
 	visibility: hidden;
 }
 
@@ -1742,8 +1815,9 @@ html:not([data-right-sidebar-open-duringEnter], [data-right-sidebar-open-postEnt
 		--lm-glass-thin-bg: var(--lm-bg-content-solid);
 		--lm-glass-edge: var(--lm-separator);
 	}
-	.lm-backdrop-layer {
-		display: none;
+	.lm-backdrop-layer,
+	.lm-backdrop-canvas {
+		display: none !important;
 	}
 	:is(.Root__nav-bar, .Root__right-sidebar-peek, .main-nowPlayingBar-container, .main-globalNav-historyButtons, .main-globalNav-link-icon, .custom-navlinks-scrollable_container, .main-globalNav-searchInputContainer, .main-globalNav-contentRight > .main-actionButtons, [data-testid="user-widget-link"], [data-tippy-root], .main-topBar-background, .main-card-PlayButtonContainer [class*="button-primary__inner"], [class*="-legacy-tooltip"], [class*="-tooltip "], [class$="-tooltip"], .notistack-Snackbar [class*="legacy-box--elevated"]) {
 		backdrop-filter: none !important;
