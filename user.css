@@ -1744,9 +1744,10 @@ html[data-lm-page="lyrics"] .Root__main-view,
 html[data-cinema-npv-postEnter] .main-actionBar-ActionBarContainer[data-lm-lyrics] > [data-overlayscrollbars-viewport] {
 	mask-image: linear-gradient(to bottom, transparent 24px, #000 104px, #000 calc(100% - var(--lm-pill-h) - 88px), transparent calc(100% - var(--lm-pill-h) - 48px));
 }
-/* The view lies over the right panel, which Spotify keeps underneath, emptied: it would show through. It stays
-   when Spotify opens it beside the view (the queue, a device list) */
-html[data-lm-lyrics-view]:not([data-right-sidebar-open-duringEnter], [data-right-sidebar-open-postEnter], [data-right-sidebar-open-preExit]) .Root__right-sidebar {
+/* The active cinema view lies over the right panel, which Spotify keeps underneath, emptied: it would show
+   through. It stays when Spotify opens it beside the view (the queue, a device list). Require active cinema:
+   a retained lyrics view or its delayed marker must not hide the sidebar on ordinary album or lyrics pages. */
+html[data-cinema-npv-postEnter][data-lm-lyrics-view]:not([data-right-sidebar-open-duringEnter], [data-right-sidebar-open-postEnter], [data-right-sidebar-open-preExit]) .Root__right-sidebar {
 	visibility: hidden;
 }
 

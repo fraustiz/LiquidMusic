@@ -743,6 +743,9 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 	const LYRICS_COLOURS = '[style*="--lyrics-color-background"]';
 	const CINEMA_COLOURS = '[style*="--cinema-mode-bg-color-from"]';
 	const VIEW_COLOURS = '[style*="--cinema-mode-bg-color"]';
+	// A readable class can also be mapped onto a sidebar scroll host. Lyrics in that host are a preview,
+	// not the expanded view: marking them as cinema lyrics would hide the very sidebar containing them.
+	const CINEMA_VIEW = ".Root__top-container > :not(.Root__right-sidebar, .Root__main-view, .Root__nav-bar) > .main-actionBar-ActionBarContainer";
 	const LYRICS_MARKS = ["data-lm-view-colours", "data-lm-lyrics", "data-lm-lyrics-host", "data-lm-before-lyrics"];
 
 	function markLyricsViews() {
@@ -755,7 +758,7 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 			if (viewport) marks.get("data-lm-view-colours").add(child);
 		}
 		for (const lyrics of document.querySelectorAll(LYRICS_COLOURS)) {
-			const container = lyrics.closest(".main-actionBar-ActionBarContainer");
+			const container = lyrics.closest(CINEMA_VIEW);
 			if (container) {
 				marks.get("data-lm-lyrics").add(container); // `.main-actionBar-ActionBarContainer:has(lyrics)`
 				const before = container.previousElementSibling; // `:has(+ .main-actionBar-ActionBarContainer lyrics)`
