@@ -1,25 +1,29 @@
 # LiquidMusic
 
-A [Spicetify](https://spicetify.app) theme inspired by iOS 27 and Apple Music: frosted glass panels, a floating
+A [Spicetify](https://spicetify.app) theme inspired by iOS 27 and Apple Music: translucent glass panels, a floating
 player, and an accent colour taken from whatever is playing.
 
 ![LiquidMusic in dark mode, on the home page](screenshots/home-dark.webp)
 
 ## Features
 
-- **Glass everywhere.** The library, the side panel, the toolbar, menus, the search field and the bars that stick
-  to the top of a page as it scrolls are frosted glass over a blurred copy of the current artwork, so the whole
-  window takes on the colours of the song.
-- **Background and panels, your choice.** Two settings in your profile menu in Spotify, each kept as it was by
-  default:
-  - **LiquidMusic background**: *Blurred artwork* (default), *Kawarp* or *Kawarp, animated*.
+- **Glass everywhere.** The library, side panel, toolbar, menus, search field and sticky bars take on the
+  colours of the current artwork. The original frosted-glass material remains the default.
+- **One settings menu.** Open your profile menu → **LiquidMusic**. Each submenu shows the current choice and
+  marks the selected option:
+  - **Appearance**: *Spicetify setting* (default), *Follow system*, *Dark* or *Light*. An override applies live and
+    survives restarts; the default follows the scheme selected in Spicetify or the Marketplace.
+  - **Surfaces**: *Frosted glass* (default), *Liquid Glass* or *Clear, like Spicy Lyrics*. Liquid Glass uses clearer
+    panels, a less blurred artwork backdrop and refraction along the rounded edges of floating controls and the
+    player. The centre stays sharp and the text is never displaced. It approximates Apple's material using SVG
+    backdrop filters on Chromium, with a light-blur fallback. Clear panels show the backdrop untinted, darkened in
+    dark mode and lifted toward white in light mode. Sticky bars and menus stay frosted for readability.
+  - **Background**: *Blurred artwork* (default), *Kawarp* or *Kawarp, animated*.
     [Kawarp](https://github.com/better-lyrics/kawarp) draws the artwork with WebGL, Kawase blur and domain warping,
-    the same fluid look as Spicy Lyrics. Animated, it flows with the song's tempo, loudness and beats; paused, or
-    with reduced motion, it only drifts slowly, and it stops when the window is hidden. Without WebGL the theme
-    falls back to the blurred artwork.
-  - **LiquidMusic panels**: *Frosted glass* (default) or *Clear, like Spicy Lyrics*: the library, the page and the
-    side panel let the background through untinted, graded like Spicy Lyrics' Now Playing card (darkened in dark
-    mode, lifted toward white in light mode). Sticky bars keep their glass.
+    the same fluid look as Spicy Lyrics. Animated, it follows the song's tempo, loudness and beats; it calms down
+    when paused or under reduced motion and stops when the window is hidden. Without WebGL it falls back to artwork.
+  - **Reset theme settings** restores the Spicetify appearance, frosted glass and blurred artwork.
+  Existing surface and background selections are preserved; Liquid Glass is opt-in.
 - **Colour from the artwork.** The accent (buttons, progress bar, highlights, links) is picked from the album cover
   and adjusted until it reads at 4.5:1 or better on the theme's surfaces. Panels thicken on busy covers so
   secondary text stays legible.

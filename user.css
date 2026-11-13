@@ -1838,3 +1838,70 @@ html[data-cinema-npv-postEnter][data-lm-lyrics-view]:not([data-right-sidebar-ope
 		--lm-glass-thin-bg: var(--lm-bg-content-solid);
 	}
 }
+
+/* 11 · Liquid Glass — opt-in; the original frosted and clear modes stay unchanged.
+   theme.js supplies a rounded displacement map on the backdrop only. The centre stays sharp and text is
+   never displaced. Without SVG backdrop support the material falls back to a light blur. */
+@media (prefers-reduced-transparency: no-preference) and (prefers-contrast: no-preference) {
+	:root[data-lm-panels="liquid"] {
+		--lm-bg-content: rgba(22, 22, 24, 0.28);
+		--lm-glass-thick-bg: rgba(30, 30, 32, 0.24);
+		--lm-glass-regular-bg: rgba(24, 24, 28, 0.24);
+		--lm-label-2: rgba(235, 235, 245, 0.78);
+		--lm-glass-highlight: rgba(255, 255, 255, 0.48);
+		--lm-glass-rim-bottom: rgba(255, 255, 255, 0.14);
+		--lm-glass-rim-side: rgba(255, 255, 255, 0.2);
+		--lm-glass-sheen: linear-gradient(155deg, rgba(255, 255, 255, 0.12), transparent 38%, transparent 65%, rgba(255, 255, 255, 0.035));
+		--lm-glass-bevel:
+			inset 0 1px 0 var(--lm-glass-highlight),
+			inset 1px 0 0 var(--lm-glass-rim-side),
+			inset -1px 0 0 var(--lm-glass-rim-side),
+			inset 0 -1px 0 var(--lm-glass-rim-bottom),
+			inset 0 0 0 var(--lm-edge-w) var(--lm-glass-edge);
+		--lm-glass-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.55), 0 3px 8px rgba(0, 0, 0, 0.22);
+		--lm-glass-shadow-sm: 0 6px 18px -5px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.18);
+	}
+	:root[data-lm-panels="liquid"][data-lm-theme="light"] {
+		--lm-bg-content: rgba(255, 255, 255, 0.36);
+		--lm-glass-thick-bg: rgba(250, 250, 252, 0.32);
+		--lm-glass-regular-bg: rgba(255, 255, 255, 0.3);
+		--lm-label-2: rgba(60, 60, 67, 0.78);
+		--lm-glass-highlight: rgba(255, 255, 255, 0.95);
+		--lm-glass-rim-bottom: rgba(255, 255, 255, 0.6);
+		--lm-glass-rim-side: rgba(255, 255, 255, 0.65);
+		--lm-glass-sheen: linear-gradient(155deg, rgba(255, 255, 255, 0.34), transparent 38%, transparent 65%, rgba(255, 255, 255, 0.1));
+		--lm-glass-shadow: 0 16px 40px -12px rgba(24, 32, 48, 0.24), 0 3px 8px rgba(24, 32, 48, 0.08);
+		--lm-glass-shadow-sm: 0 6px 18px -5px rgba(24, 32, 48, 0.16), 0 1px 3px rgba(24, 32, 48, 0.06);
+	}
+	:root[data-lm-panels="liquid"] .lm-backdrop-layer {
+		filter: blur(32px) saturate(150%);
+	}
+	:root[data-lm-panels="liquid"] :is(.Root__nav-bar, .Root__right-sidebar-peek) {
+		backdrop-filter: blur(10px) saturate(150%);
+	}
+	:root[data-lm-panels="liquid"] :is(.main-globalNav-historyButtons, .main-globalNav-link-icon, .custom-navlinks-scrollable_container, .main-globalNav-contentRight > .main-actionButtons, [data-testid="user-widget-link"], .main-nowPlayingBar-container),
+	:root[data-lm-panels="liquid"] .main-globalNav-searchInputContainer::before {
+		background-image: var(--lm-glass-sheen) !important;
+		backdrop-filter: var(--lm-glass-optics, blur(6px)) saturate(150%);
+		box-shadow: var(--lm-glass-bevel), var(--lm-glass-shadow-sm) !important;
+	}
+	:root[data-lm-panels="liquid"] .main-nowPlayingBar-container {
+		box-shadow: var(--lm-glass-bevel), var(--lm-glass-shadow) !important;
+	}
+	:root[data-lm-panels="liquid"] .custom-navlinks-scrollable_container .main-globalNav-link-icon {
+		background: none !important;
+		backdrop-filter: none;
+		box-shadow: none !important;
+	}
+	:root[data-lm-panels="liquid"] .main-globalNav-searchInputContainer:focus-within::before {
+		box-shadow: 0 0 0 2px var(--lm-accent), var(--lm-glass-bevel), var(--lm-glass-shadow-sm) !important;
+	}
+}
+
+/* Search owns its blur on ::before; disabling the container's filter alone leaves that material blurred. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+	:is(.main-globalNav-historyButtons, .main-globalNav-link-icon, .custom-navlinks-scrollable_container, .main-globalNav-contentRight > .main-actionButtons, [data-testid="user-widget-link"], .main-nowPlayingBar-container),
+	.main-globalNav-searchInputContainer::before {
+		backdrop-filter: none !important;
+	}
+}
