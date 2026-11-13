@@ -225,6 +225,20 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 			label2: { rgb: { r: 60, g: 60, b: 67 }, alpha: 0.6 },
 		},
 	};
+	const LIQUID_SURFACES = {
+		dark: {
+			scrim: { rgb: BLACK, alpha: 0.45 },
+			content: { rgb: { r: 22, g: 22, b: 24 }, alpha: 0.28 },
+			glass: { rgb: { r: 30, g: 30, b: 32 }, alpha: 0.24 },
+			label2: { rgb: { r: 235, g: 235, b: 245 }, alpha: 0.78 },
+		},
+		light: {
+			scrim: { rgb: WHITE, alpha: 0.5 },
+			content: { rgb: WHITE, alpha: 0.36 },
+			glass: { rgb: { r: 250, g: 250, b: 252 }, alpha: 0.32 },
+			label2: { rgb: { r: 60, g: 60, b: 67 }, alpha: 0.78 },
+		},
+	};
 	const MAX_SURFACE_ALPHA = 0.96;
 	// Spicetify neutrals swapped at runtime in "auto" mode; must match color.ini [dark] / [light] (tested)
 	const NEUTRALS = {
@@ -351,8 +365,9 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 
 	// Secondary text must stay as readable as on the opaque reference surface: 4.5:1 in dark mode; in light mode
 	// Apple's own secondary label only reaches ~3.5:1 on white, so the reference itself is the bar.
-	function labelTarget(mode) {
-		const s = SURFACES[mode] || SURFACES.dark;
+	function labelTarget(mode, liquid = false) {
+		const materials = liquid ? LIQUID_SURFACES : SURFACES;
+		const s = materials[mode] || materials.dark;
 		const onOpaque = (surface) => contrastRatio(compositeOver(s.label2.rgb, s.label2.alpha, surface.rgb), surface.rgb);
 		const reference = Math.min(onOpaque(s.content), onOpaque(s.glass));
 		return Math.min(MIN_CONTRAST, Math.round((reference - 0.1) * 100) / 100);
@@ -371,10 +386,11 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 
 	// Content panel and glass panels over a given artwork colour; `worst` is the rendered surface the accent must
 	// contrast with (the brighter one in dark mode, the darker one in light mode).
-	function adaptSurfaces(artwork, mode) {
-		const s = SURFACES[mode] || SURFACES.dark;
+	function adaptSurfaces(artwork, mode, liquid = false) {
+		const materials = liquid ? LIQUID_SURFACES : SURFACES;
+		const s = materials[mode] || materials.dark;
 		const backdrop = compositeOver(s.scrim.rgb, s.scrim.alpha, artwork);
-		const target = labelTarget(mode);
+		const target = labelTarget(mode, liquid);
 		const content = surfaceOver(s.content, backdrop, s.label2, target);
 		const glass = surfaceOver(s.glass, backdrop, s.label2, target);
 		const brighter = relativeLuminance(content.effective) >= relativeLuminance(glass.effective) ? content : glass;
@@ -648,6 +664,7 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 		CONTENT_BG,
 		MIN_CONTRAST,
 		SURFACES,
+		LIQUID_SURFACES,
 		NEUTRALS,
 	};
 	if (typeof module !== "undefined" && module.exports) {
@@ -845,10 +862,12 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 		// Clear panels: the backdrop is graded like Spicy Lyrics' card (user.css), so text and accent sit on the
 		// graded artwork itself: darkened (× 0.6) in dark mode, lifted (0.68 × c + 0.51) in light
 		if (panelsMode() === "clear") {
+			root.style.removeProperty("--lm-bg-content");
+			root.style.removeProperty("--lm-glass-thick-bg");
 			const grade = state.mode === "dark" ? (c) => c * 0.6 : (c) => Math.min(255, c * 0.68 + 130);
 			return { r: Math.round(grade(artwork.r)), g: Math.round(grade(artwork.g)), b: Math.round(grade(artwork.b)) };
 		}
-		const s = adaptSurfaces(artwork, state.mode);
+		const s = adaptSurfaces(artwork, state.mode, panelsMode() === "liquid");
 		const rgba = ({ rgb, alpha }) => `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
 		root.style.setProperty("--lm-bg-content", rgba(s.content));
 		root.style.setProperty("--lm-glass-thick-bg", rgba(s.glass));
@@ -866,10 +885,11 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 	}
 
 	function applyMode() {
-		Object.assign(state, resolveMode(Spicetify.Config?.color_scheme, matchMedia(LIGHT_QUERY).matches));
+		const appearance = appearanceMode();
+		Object.assign(state, resolveMode(appearance === "default" ? Spicetify.Config?.color_scheme : appearance, matchMedia(LIGHT_QUERY).matches));
 		root.dataset.lmTheme = state.mode;
 		for (const [name, hex] of Object.entries(NEUTRALS[state.mode])) {
-			if (state.auto) setSpice(name, parseColor(hex));
+			if (state.auto || appearance !== "default") setSpice(name, parseColor(hex));
 			// A fixed scheme gets its colours from color.ini (or the Marketplace): drop what auto mode set inline
 			else for (const prefix of ["--spice-", "--spice-rgb-"]) root.style.removeProperty(prefix + name);
 		}
@@ -920,15 +940,23 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 	// Two settings, kept in localStorage and picked from the profile menu: "static" (default) lets the cross-fade
 	// play and then freezes the frame; "animated" keeps it moving.
 	const BG_KEY = "lm-background";
-	// Defaults are the theme as it was before these settings: the blurred artwork and frosted-glass panels
+	// Preserve existing choices and the frosted-glass default; Liquid Glass is opt-in.
 	const BG_MODES = [
 		["classic", "Blurred artwork"],
 		["static", "Kawarp"],
 		["animated", "Kawarp, animated"],
 	];
+	const APPEARANCE_KEY = "lm-appearance";
+	const APPEARANCE_MODES = [
+		["default", "Spicetify setting"],
+		["auto", "Follow system"],
+		["dark", "Dark"],
+		["light", "Light"],
+	];
 	const PANELS_KEY = "lm-panels";
 	const PANEL_MODES = [
 		["glass", "Frosted glass"],
+		["liquid", "Liquid Glass"],
 		["clear", "Clear, like Spicy Lyrics"],
 	];
 	const BG_SCALE = 0.5; // the effect is a blur: half the pixels look the same and cost a quarter
@@ -957,12 +985,15 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 			return modes[0][0];
 		}
 	}
+	let refreshSettingsMenu = () => {};
+	const appearanceMode = () => storedChoice(APPEARANCE_KEY, APPEARANCE_MODES);
 	const backgroundMode = () => storedChoice(BG_KEY, BG_MODES);
 	const panelsMode = () => storedChoice(PANELS_KEY, PANEL_MODES);
 
 	// The panels' look lives on <html> for user.css; the accent is measured against what they now show
 	function applyPanelsMode() {
 		root.dataset.lmPanels = panelsMode();
+		root.dispatchEvent(new Event("lm-material-change"));
 		safe(applyAccent);
 	}
 
@@ -1100,28 +1131,50 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 		// Between the blurred artwork and Kawarp the backdrop is drawn again; between Kawarp's two, only its motion
 		if ((before === "classic") !== (mode === "classic")) loadBackdrop(state.backdropUrl, state.request, state.previewUrl);
 		syncAnimation();
+		refreshSettingsMenu();
 	}
 
 	function setPanelsMode(mode) {
 		store(PANELS_KEY, mode);
 		applyPanelsMode();
+		refreshSettingsMenu();
 	}
 
-	// Two submenus in the profile menu, each a set of options with a tick on the current one
+	// One profile-menu entry, with independent radio groups and summaries of the current choices.
 	function registerSettingsMenu() {
 		const { Menu } = Spicetify;
 		if (!Menu?.SubMenu || !Menu.Item) return warn("Spicetify.Menu missing, the settings are not in the menu");
+		const groups = [];
 		const group = (title, modes, current, apply) => {
-			const items = new Map();
-			const pick = (id) => {
-				for (const [other, item] of items) item.setState(other === id);
+			const items = modes.map(([id, label]) => new Menu.Item(label, id === current(), () => {
 				apply(id);
-			};
-			for (const [id, label] of modes) items.set(id, new Menu.Item(label, id === current(), () => pick(id)));
-			new Menu.SubMenu(title, [...items.values()]).register();
+				refreshSettingsMenu();
+			}));
+			const submenu = new Menu.SubMenu(title, items);
+			groups.push(() => {
+				const selected = current();
+				items.forEach((item, index) => item.setState(modes[index][0] === selected));
+				submenu.name = `${title}: ${modes.find(([id]) => id === selected)?.[1] || modes[0][1]}`;
+			});
+			return submenu;
 		};
-		group("LiquidMusic background", BG_MODES, backgroundMode, setBackgroundMode);
-		group("LiquidMusic panels", PANEL_MODES, panelsMode, setPanelsMode);
+		const appearance = group("Appearance", APPEARANCE_MODES, appearanceMode, (mode) => {
+			store(APPEARANCE_KEY, mode);
+			applyMode();
+		});
+		const surfaces = group("Surfaces", PANEL_MODES, panelsMode, setPanelsMode);
+		const background = group("Background", BG_MODES, backgroundMode, setBackgroundMode);
+		const reset = new Menu.Item("Reset theme settings", false, () => {
+			store(APPEARANCE_KEY, "default");
+			store(PANELS_KEY, "glass");
+			setBackgroundMode("classic");
+			applyPanelsMode();
+			applyMode();
+			refreshSettingsMenu();
+		});
+		refreshSettingsMenu = () => groups.forEach((refresh) => refresh());
+		refreshSettingsMenu();
+		new Menu.SubMenu("LiquidMusic", [appearance, surfaces, background, reset]).register();
 	}
 
 	// ---- Loading the artwork into Kawarp
@@ -1259,8 +1312,114 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 		applyAccent();
 	}
 
+	// An optical layer on floating controls, never a filter on their foreground. The displacement map is
+	// neutral in the centre and bends the backdrop along a rounded edge. Rebuild only on size changes;
+	// a bounded bitmap keeps a wide player inexpensive. Chromium supports SVG backdrop filters.
+	function startGlassOptics() {
+		if (!CSS.supports("backdrop-filter", 'url("#lm-optics-probe")')) return;
+		const selector = ".main-globalNav-historyButtons, .main-globalNav-link-icon, .custom-navlinks-scrollable_container, .main-globalNav-searchInputContainer, .main-globalNav-contentRight > .main-actionButtons, [data-testid='user-widget-link'], .main-nowPlayingBar-container";
+		const ns = "http://www.w3.org/2000/svg";
+		const svg = document.createElementNS(ns, "svg");
+		svg.id = "lm-glass-optics";
+		svg.setAttribute("aria-hidden", "true");
+		svg.setAttribute("width", "0");
+		svg.setAttribute("height", "0");
+		svg.style.cssText = "position:fixed;pointer-events:none;overflow:hidden";
+		const defs = document.createElementNS(ns, "defs");
+		svg.append(defs);
+		document.body.append(svg);
+		const entries = new Map();
+		const solid = matchMedia(SOLID_SURFACES_QUERY);
+		let serial = 0;
+		let frame = 0;
+		const create = (name, attributes) => {
+			const node = document.createElementNS(ns, name);
+			for (const [key, value] of Object.entries(attributes)) node.setAttribute(key, value);
+			return node;
+		};
+		function update(el, entry) {
+			const { width, height } = el.getBoundingClientRect();
+			if (width < 1 || height < 1) return;
+			const radius = Math.min(parseFloat(getComputedStyle(el).borderTopLeftRadius) || height / 2, width / 2, height / 2);
+			const key = `${Math.round(width)}:${Math.round(height)}:${radius}`;
+			if (entry.key === key) return;
+			entry.key = key;
+			const canvas = document.createElement("canvas");
+			const ratio = Math.min(1, 768 / width, 256 / height);
+			canvas.width = Math.max(1, Math.round(width * ratio));
+			canvas.height = Math.max(1, Math.round(height * ratio));
+			const ctx = canvas.getContext("2d");
+			if (!ctx) return;
+			const map = ctx.createImageData(canvas.width, canvas.height);
+			const band = Math.min(12, radius * 0.7);
+			for (let y = 0; y < canvas.height; y++) {
+				for (let x = 0; x < canvas.width; x++) {
+					const px = (x + 0.5) * width / canvas.width;
+					const py = (y + 0.5) * height / canvas.height;
+					const dx = px - Math.max(radius, Math.min(width - radius, px));
+					const dy = py - Math.max(radius, Math.min(height - radius, py));
+					const length = Math.hypot(dx, dy);
+					const depth = radius - length;
+					const bend = band > 0 && depth > 0 && depth < band ? Math.sin(depth / band * Math.PI) : 0;
+					const i = (y * canvas.width + x) * 4;
+					map.data[i] = Math.round(128 + (length ? dx / length : 0) * bend * 110);
+					map.data[i + 1] = Math.round(128 + (length ? dy / length : 0) * bend * 110);
+					map.data[i + 2] = 128;
+					map.data[i + 3] = 255;
+				}
+			}
+			ctx.putImageData(map, 0, 0);
+			entry.filter.setAttribute("width", width);
+			entry.filter.setAttribute("height", height);
+			entry.image.setAttribute("width", width);
+			entry.image.setAttribute("height", height);
+			entry.image.setAttribute("href", canvas.toDataURL());
+			el.style.setProperty("--lm-glass-optics", `url("#${entry.filter.id}")`);
+		}
+		const resize = new ResizeObserver(() => schedule());
+		function refresh() {
+			frame = 0;
+			for (const [el, entry] of entries) {
+				if (!el.isConnected || solid.matches || root.dataset.lmPanels !== "liquid") {
+					resize.unobserve(el);
+					entry.filter.remove();
+					el.style.removeProperty("--lm-glass-optics");
+					entries.delete(el);
+				}
+			}
+			if (solid.matches || root.dataset.lmPanels !== "liquid") return;
+			for (const el of document.querySelectorAll(selector)) {
+				// Custom app icons share their parent's material; do not create nested optical surfaces.
+				if (el.matches(".main-globalNav-link-icon") && el.closest(".custom-navlinks-scrollable_container")) continue;
+				if (!entries.has(el)) {
+					const filter = create("filter", { id: `lm-lens-${++serial}`, x: 0, y: 0, width: 1, height: 1, filterUnits: "userSpaceOnUse", "color-interpolation-filters": "sRGB" });
+					const image = create("feImage", { x: 0, y: 0, width: "100%", height: "100%", preserveAspectRatio: "none", result: "lens" });
+					filter.append(
+						image,
+						create("feGaussianBlur", { in: "SourceGraphic", stdDeviation: "0.7", result: "soft" }),
+						create("feDisplacementMap", { in: "soft", in2: "lens", scale: "18", xChannelSelector: "R", yChannelSelector: "G" }),
+					);
+					defs.append(filter);
+					entries.set(el, { filter, image, key: null });
+					resize.observe(el);
+				}
+				update(el, entries.get(el));
+			}
+		}
+		function schedule() {
+			if (!frame) frame = requestAnimationFrame(() => safe(refresh));
+		}
+		new MutationObserver((records) => {
+			if (records.some((record) => !svg.contains(record.target))) schedule();
+		}).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
+		root.addEventListener("lm-material-change", schedule);
+		solid.addEventListener("change", schedule);
+		schedule();
+	}
+
 	function init() {
 		backdrop();
+		safe(startGlassOptics);
 		applyMode();
 		matchMedia(LIGHT_QUERY).addEventListener("change", () => safe(applyMode));
 		matchMedia(SOLID_SURFACES_QUERY).addEventListener("change", () => safe(applyAccent));
@@ -1279,7 +1438,7 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 		Object.assign(window.LiquidMusic, {
 			refresh: () => onSongChange(),
 			// The profile menu's settings, from the console too: background("classic" | "static" | "animated"),
-			// panels("glass" | "clear")
+			// panels("glass" | "liquid" | "clear")
 			background: (mode) => BG_MODES.some(([id]) => id === mode) && (setBackgroundMode(mode), true),
 			panels: (mode) => PANEL_MODES.some(([id]) => id === mode) && (setPanelsMode(mode), true),
 			state: () => ({ mode: state.mode, auto: state.auto, accent: toHex(state.accent), request: state.request }),
