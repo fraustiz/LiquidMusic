@@ -1710,7 +1710,9 @@ html[data-lm-page="lyrics"] .Root__main-view,
 	background: transparent !important;
 	box-shadow: none !important;
 }
-[style*="--lyrics-color-background"] {
+/* ivLyrics sets the same variables inline on its own container: it keeps its colours and the opaque background of
+   its full-screen view, which this rule had made transparent over the whole app */
+[style*="--lyrics-color-background"]:not(.lyrics-lyricsContainer-LyricsContainer) {
 	--lyrics-color-background: transparent !important;
 	--lyrics-color-active: var(--lm-label) !important;
 	--lyrics-color-passed: color-mix(in srgb, var(--lm-label) 45%, transparent) !important;
