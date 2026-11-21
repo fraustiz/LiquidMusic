@@ -782,6 +782,12 @@ html[data-lm-theme="light"] .main-nowPlayingBar-nowPlayingBar::after {
 .main-nowPlayingBar-extraControls {
 	gap: 4px;
 }
+/* ivLyrics sends its fullscreen button to the end with `order: 9999`, but its lyrics button also carries the
+   fullscreen class, so both landed after the miniplayer. The lyrics button (its microphone path) goes back to
+   the spot of Spotify's own lyrics button, before the queue. */
+.ivlyrics-playbar-controls > .ivlyrics-playbar-control:has(path[d^="M13.426 2.574"]) {
+	order: -1 !important;
+}
 .main-nowPlayingBar-volumeBar {
 	width: 84px !important;
 	flex: none;
