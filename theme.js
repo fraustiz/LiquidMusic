@@ -1362,10 +1362,11 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 					const dy = py - Math.max(radius, Math.min(height - radius, py));
 					const length = Math.hypot(dx, dy);
 					const depth = radius - length;
-					const bend = band > 0 && depth > 0 && depth < band ? Math.sin(depth / band * Math.PI) : 0;
+					// Monotonic edge profile, as on Android: no mirrored fold near the rim.
+					const bend = band > 0 && depth < band ? Math.pow(1 - Math.max(0, depth) / band, 2) * 0.45 * band * 255 / 18 : 0;
 					const i = (y * canvas.width + x) * 4;
-					map.data[i] = Math.round(128 + (length ? dx / length : 0) * bend * 110);
-					map.data[i + 1] = Math.round(128 + (length ? dy / length : 0) * bend * 110);
+					map.data[i] = Math.round(128 + (length ? dx / length : 0) * bend);
+					map.data[i + 1] = Math.round(128 + (length ? dy / length : 0) * bend);
 					map.data[i + 2] = 128;
 					map.data[i + 3] = 255;
 				}
@@ -1398,7 +1399,7 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 					const image = create("feImage", { x: 0, y: 0, width: "100%", height: "100%", preserveAspectRatio: "none", result: "lens" });
 					filter.append(
 						image,
-						create("feGaussianBlur", { in: "SourceGraphic", stdDeviation: "0.7", result: "soft" }),
+						create("feGaussianBlur", { in: "SourceGraphic", stdDeviation: "3", result: "soft" }),
 						create("feDisplacementMap", { in: "soft", in2: "lens", scale: "18", xChannelSelector: "R", yChannelSelector: "G" }),
 					);
 					defs.append(filter);
