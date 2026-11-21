@@ -475,8 +475,10 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 		["main-nowPlayingWidget-coverArt", ":has(> [data-testid='cover-art-button'])"],
 		["main-nowPlayingWidget-coverArtContainer", "[data-testid='cover-art-button']"],
 		["main-trackInfo-container", "[data-testid='now-playing-widget'] > [data-testid='CoverSlotCollapsed__container'] + *, [data-testid='now-playing-widget-v2'] > [data-testid='cover-art-container'] + *"],
-		["main-trackInfo-name", ".main-nowPlayingWidget-nowPlaying .main-trackInfo-container > :first-child"],
-		["main-trackInfo-artists", "[data-testid='now-playing-widget'] .main-trackInfo-container > :nth-child(3), [data-testid='now-playing-widget-v2'] .main-trackInfo-container > :nth-child(2)"],
+		// In now-playing-widget-v2 the lines are found by content: Spotify 1.3.10 added an empty first line, which made
+		// the title take the artists' name and left the artists as an unnamed last line (hidden as a badge line)
+		["main-trackInfo-name", "[data-testid='now-playing-widget'] .main-trackInfo-container > :first-child, [data-testid='now-playing-widget-v2'] .main-trackInfo-container > :has([data-testid='context-item-link'])"],
+		["main-trackInfo-artists", "[data-testid='now-playing-widget'] .main-trackInfo-container > :nth-child(3), [data-testid='now-playing-widget-v2'] .main-trackInfo-container > :has([data-testid$='-byline'], a[href*='/artist/'])"],
 		["main-nowPlayingWidget-actionButtonWrapper", ":is([data-testid='now-playing-widget'], [data-testid='now-playing-widget-v2']) > :last-child:has(button)"],
 		["player-controls", "[data-testid='player-controls']"],
 		["player-controls__buttons", "[data-testid='general-controls']"],
@@ -575,7 +577,7 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 		["main-nowPlayingView-aboutArtist", ".main-nowPlayingView-section:has([style*='background-image'])"],
 		// Track title and artists, in the pill and in the Now Playing panel
 		["main-trackInfo-container", "[data-testid='now-playing-widget'] > [data-testid='CoverSlotCollapsed__container'] + *, .main-nowPlayingView-contextItemInfo > [data-testid='minimized-track-visual-enhancement'] + *"],
-		["main-trackInfo-name", ".main-trackInfo-container > :first-child"],
+		["main-trackInfo-name", ".main-trackInfo-container > :first-child:not([data-testid='now-playing-widget-v2'] *)"],
 		["main-trackInfo-artists", "[data-testid='now-playing-widget'] .main-trackInfo-container > :nth-child(3), .main-nowPlayingView-contextItemInfo .main-trackInfo-container > :nth-child(2)"],
 		["progress-bar", "[data-testid='progress-bar']"],
 	];
