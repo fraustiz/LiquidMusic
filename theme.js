@@ -988,34 +988,34 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 	const BG_KEY = "lm-background";
 	// Preserve existing choices and the frosted-glass default; Liquid Glass is opt-in.
 	const BG_MODES = [
-		["classic", "Blurred artwork"],
-		["static", "Kawarp"],
-		["animated", "Kawarp, animated"],
+		["classic", "Blur"],
+		["static", "Fluid"],
+		["animated", "Animated"],
 	];
 	const APPEARANCE_KEY = "lm-appearance";
 	const APPEARANCE_MODES = [
-		["default", "Spicetify setting"],
-		["auto", "Follow system"],
+		["default", "Default"],
+		["auto", "System"],
 		["dark", "Dark"],
 		["light", "Light"],
 	];
 	const PANELS_KEY = "lm-panels";
 	const PANEL_MODES = [
-		["glass", "Frosted glass"],
-		["liquid", "Liquid Glass"],
-		["clear", "Clear, like Spicy Lyrics"],
+		["glass", "Frosted"],
+		["liquid", "Liquid"],
+		["clear", "Clear"],
 	];
 	// The player: controls at the left and the track in the middle (default), or Spotify's order (issue #10); a pill
 	// or the window's whole width (issue #12)
 	const PLAYER_LAYOUT_KEY = "lm-player-layout";
 	const PLAYER_LAYOUTS = [
-		["controls-left", "Controls left, track centre"],
-		["controls-centre", "Track left, controls centre"],
+		["controls-left", "Left"],
+		["controls-centre", "Centre"],
 	];
 	const PLAYER_WIDTH_KEY = "lm-player-width";
 	const PLAYER_WIDTHS = [
 		["pill", "Pill"],
-		["full", "Full width"],
+		["full", "Wide"],
 	];
 	const BG_SCALE = 0.5; // the effect is a blur: half the pixels look the same and cost a quarter
 	const BG_FPS = 60; // the render loop's cap
@@ -1224,21 +1224,21 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 			});
 			return submenu;
 		};
-		const appearance = group("Appearance", APPEARANCE_MODES, appearanceMode, (mode) => {
+		const appearance = group("Mode", APPEARANCE_MODES, appearanceMode, (mode) => {
 			store(APPEARANCE_KEY, mode);
 			applyMode();
 		});
-		const surfaces = group("Surfaces", PANEL_MODES, panelsMode, setPanelsMode);
+		const surfaces = group("Glass", PANEL_MODES, panelsMode, setPanelsMode);
 		const background = group("Background", BG_MODES, backgroundMode, setBackgroundMode);
-		const layout = group("Player layout", PLAYER_LAYOUTS, playerLayout, (mode) => {
+		const layout = group("Controls", PLAYER_LAYOUTS, playerLayout, (mode) => {
 			store(PLAYER_LAYOUT_KEY, mode);
 			applyPlayerMode();
 		});
-		const width = group("Player width", PLAYER_WIDTHS, playerWidth, (mode) => {
+		const width = group("Player", PLAYER_WIDTHS, playerWidth, (mode) => {
 			store(PLAYER_WIDTH_KEY, mode);
 			applyPlayerMode();
 		});
-		const reset = new Menu.Item("Reset theme settings", false, () => {
+		const reset = new Menu.Item("Reset", false, () => {
 			store(APPEARANCE_KEY, "default");
 			store(PANELS_KEY, "glass");
 			store(PLAYER_LAYOUT_KEY, PLAYER_LAYOUTS[0][0]);

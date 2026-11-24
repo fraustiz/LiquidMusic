@@ -9,27 +9,14 @@ player, and an accent colour taken from whatever is playing.
 
 - **Glass everywhere.** The library, side panel, toolbar, menus, search field and sticky bars take on the
   colours of the current artwork. The original frosted-glass material remains the default.
-- **One settings menu.** Open your profile menu → **LiquidMusic**. Each submenu shows the current choice and
-  marks the selected option:
-  - **Appearance**: *Spicetify setting* (default), *Follow system*, *Dark* or *Light*. An override applies live and
-    survives restarts; the default follows the scheme selected in Spicetify or the Marketplace.
-  - **Surfaces**: *Frosted glass* (default), *Liquid Glass* or *Clear, like Spicy Lyrics*. Liquid Glass uses clearer
-    panels, a less blurred artwork backdrop and refraction along the rounded edges of floating controls and the
-    player. Like the mobile version, its refraction is strongest at the rim and fades smoothly inward, over a
-    light 3px frost at the centre. A wider, sharper rim keeps the refraction visible on desktop; the text stays
-    sharp and is never displaced. SVG backdrop filters on Chromium approximate
-    Apple's material, with the same light frost as a fallback. Clear panels show the backdrop untinted, darkened in
-    dark mode and lifted toward white in light mode. Sticky bars and menus stay frosted for readability.
-  - **Background**: *Blurred artwork* (default), *Kawarp* or *Kawarp, animated*.
-    [Kawarp](https://github.com/better-lyrics/kawarp) draws the artwork with WebGL, Kawase blur and domain warping,
-    the same fluid look as Spicy Lyrics. Animated, it follows the song's tempo, loudness and beats; it calms down
-    when paused or under reduced motion and stops when the window is hidden. Without WebGL it falls back to artwork.
-  - **Player layout**: *Controls left, track centre* (default) or *Track left, controls centre*, Spotify's own order
-    with the playback controls in the middle of the player.
-  - **Player width**: *Pill* (default) or *Full width*, a player across the whole window with more room for the
-    title and artists.
-  - **Reset theme settings** restores the Spicetify appearance, frosted glass, blurred artwork and the pill player.
-  Existing surface and background selections are preserved; Liquid Glass is opt-in.
+- **Settings.** Profile menu → **LiquidMusic**. Defaults come first:
+  - **Mode**: Default (your Spicetify scheme), System, Dark or Light.
+  - **Glass**: Frosted, Liquid (clearer, with refraction on the edges) or Clear (no tint, like Spicy Lyrics).
+  - **Background**: Blur (blurred artwork), Fluid ([Kawarp](https://github.com/better-lyrics/kawarp), like Spicy
+    Lyrics) or Animated (Fluid, moving with the music).
+  - **Controls**: Left or Centre (Spotify's layout).
+  - **Player**: Pill or Wide (the whole width of the window).
+  - **Reset** goes back to the defaults.
 - **Colour from the artwork.** The accent (buttons, progress bar, highlights, links) is picked from the album cover
   and adjusted until it reads at 4.5:1 or better on the theme's surfaces. Panels thicken on busy covers so
   secondary text stays legible.
