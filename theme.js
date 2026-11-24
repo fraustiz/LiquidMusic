@@ -1255,6 +1255,168 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 		applyMode();
 	}
 
+	// The selection of a segmented control is a lens of glass, as in bilalgursen/liquid-glass's GlassTabs (MIT): it
+	// slides to the chosen option on a spring, opening up (12% wider, 35% taller) and clearing while it travels or is
+	// pressed, and can be dragged from one option to the next. It sits above the labels, and its rim refracts the one
+	// it passes over (liquidLensOffset, no frost so the text stays sharp). Reduced motion: it jumps.
+	const LENS_SPRINGS = { slide: { omega: 14, zeta: 0.75 }, drag: { omega: 40, zeta: 0.999 } };
+	let segmentedLensSerial = 0;
+	function segmentedLens(group, buttons, choose) {
+		const ns = "http://www.w3.org/2000/svg";
+		// Two layers move together: the fill and shadow under the labels, the glass (rim, refraction) over them
+		const fill = document.createElement("span");
+		fill.className = "lm-segmented-lens lm-segmented-lens-fill";
+		const lens = document.createElement("span");
+		lens.className = "lm-segmented-lens lm-segmented-lens-glass";
+		const layers = [fill, lens];
+		for (const layer of layers) {
+			layer.setAttribute("aria-hidden", "true");
+			group.append(layer);
+		}
+		const motion = matchMedia(MOTION_QUERY);
+		const x = { x: 0, v: 0 };
+		const w = { x: 0, v: 0 };
+		const open = { x: 0, v: 0 };
+		let goal = null;
+		let base = null;
+		let pressed = false;
+		let dragX = null;
+		let frame = 0;
+		let last = 0;
+		const selected = () => buttons.findIndex((button) => button.getAttribute("aria-checked") === "true");
+		const box = (button) => ({ x: button.offsetLeft + button.offsetWidth / 2, y: button.offsetTop, w: button.offsetWidth, h: button.offsetHeight });
+
+		// The refraction map is drawn once for the lens's resting size; its motion is a transform
+		function optics(width, height) {
+			if (!CSS.supports("backdrop-filter", 'url("#lm-optics-probe")') || matchMedia(SOLID_SURFACES_QUERY).matches) return;
+			const canvas = document.createElement("canvas");
+			canvas.width = Math.max(1, Math.round(width));
+			canvas.height = Math.max(1, Math.round(height));
+			const ctx = canvas.getContext("2d");
+			if (!ctx) return;
+			const map = ctx.createImageData(canvas.width, canvas.height);
+			const strength = Math.min(width, height) / 2 * 0.5;
+			const offsets = [];
+			let max = 0;
+			for (let py = 0; py < canvas.height; py++) {
+				for (let px = 0; px < canvas.width; px++) {
+					const o = liquidLensOffset(px + 0.5, py + 0.5, width, height, height / 2, strength);
+					offsets.push(o.x, o.y);
+					max = Math.max(max, Math.abs(o.x), Math.abs(o.y));
+				}
+			}
+			const scale = Math.max(max * 2, 1);
+			for (let n = 0; n < offsets.length / 2; n++) {
+				map.data[n * 4] = Math.round((offsets[n * 2] / scale + 0.5) * 255);
+				map.data[n * 4 + 1] = Math.round((offsets[n * 2 + 1] / scale + 0.5) * 255);
+				map.data[n * 4 + 2] = 128;
+				map.data[n * 4 + 3] = 255;
+			}
+			ctx.putImageData(map, 0, 0);
+			const id = `lm-segmented-lens-${++segmentedLensSerial}`;
+			const svg = document.createElementNS(ns, "svg");
+			svg.setAttribute("width", "0");
+			svg.setAttribute("height", "0");
+			svg.style.cssText = "position:absolute;pointer-events:none";
+			svg.innerHTML = `<filter id="${id}" x="0" y="0" width="${width}" height="${height}" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feImage href="${canvas.toDataURL()}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="lens"/><feDisplacementMap in="SourceGraphic" in2="lens" scale="${scale}" xChannelSelector="R" yChannelSelector="G"/></filter>`;
+			group.querySelector("svg")?.remove();
+			group.append(svg);
+			lens.style.backdropFilter = `url("#${id}")`;
+		}
+
+		function render() {
+			const p = Math.min(Math.max(open.x, -0.12), 1.15);
+			const sx = (w.x / base.w) * (1 + 0.12 * p);
+			const sy = 1 + 0.35 * p;
+			for (const layer of layers) {
+				layer.style.transform = `translate(${(x.x - base.w / 2).toFixed(2)}px, 0) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})`;
+				layer.style.setProperty("--lm-lens-open", Math.min(Math.max(open.x, 0), 1).toFixed(3));
+			}
+		}
+		function tick(now) {
+			frame = 0;
+			const dt = last ? Math.min((now - last) / 1000, 1 / 20) : 1 / 60;
+			last = now;
+			const target = dragX === null ? goal : { ...goal, x: dragX };
+			const spring = dragX === null ? LENS_SPRINGS.slide : LENS_SPRINGS.drag;
+			const a = stepSpring(x, target.x, spring, dt);
+			const b = stepSpring(w, target.w, spring, dt);
+			const traveling = dragX === null && Math.abs(x.x - goal.x) > goal.w * 0.06;
+			const c = stepSpring(open, pressed || traveling ? 1 : 0, SWELL_SPRINGS.press, dt);
+			render();
+			if (a || b || c || pressed) frame = requestAnimationFrame(tick);
+			else last = 0;
+		}
+		const kick = () => {
+			if (!frame && lens.isConnected) frame = requestAnimationFrame(tick);
+		};
+
+		function sync() {
+			const index = selected();
+			if (index < 0) return;
+			const next = box(buttons[index]);
+			if (!next.w) return requestAnimationFrame(sync); // not laid out yet
+			const first = !base;
+			if (first || Math.abs(base.w - next.w) > 0.5 || Math.abs(base.h - next.h) > 0.5) {
+				base = next;
+				for (const layer of layers) Object.assign(layer.style, { width: `${next.w}px`, height: `${next.h}px`, top: `${next.y}px` });
+				optics(next.w, next.h);
+			}
+			goal = next;
+			if (first || motion.matches) {
+				x.x = next.x;
+				w.x = next.w;
+				x.v = w.v = 0;
+				render();
+				return;
+			}
+			kick();
+		}
+
+		// Press and drag; a tap still clicks the option. The pointer isn't captured
+		let downX = 0;
+		let dragged = false;
+		const local = (event) => event.clientX - group.getBoundingClientRect().left;
+		const centres = () => buttons.map((button) => box(button).x);
+		const onMove = (event) => {
+			const at = local(event);
+			if (!dragged && Math.abs(at - downX) < 4) return;
+			dragged = true;
+			const all = centres();
+			dragX = Math.min(Math.max(at, all[0]), all[all.length - 1]);
+			kick();
+		};
+		const onUp = () => {
+			removeEventListener("pointermove", onMove);
+			removeEventListener("pointerup", onUp);
+			removeEventListener("pointercancel", onUp);
+			pressed = false;
+			if (dragged && dragX !== null) {
+				const all = centres();
+				const nearest = all.reduce((best, c, i) => (Math.abs(c - dragX) < Math.abs(all[best] - dragX) ? i : best), 0);
+				dragX = null;
+				// The click that follows the release would pick the option under the pointer: this one wins
+				const swallow = (event) => event.stopPropagation();
+				group.addEventListener("click", swallow, { capture: true, once: true });
+				setTimeout(() => group.removeEventListener("click", swallow, { capture: true }), 0);
+				choose(nearest);
+			}
+			dragX = null;
+			kick();
+		};
+		group.addEventListener("pointerdown", (event) => {
+			if (event.button !== 0 || motion.matches) return;
+			pressed = true;
+			dragged = false;
+			downX = local(event);
+			addEventListener("pointermove", onMove);
+			addEventListener("pointerup", onUp);
+			addEventListener("pointercancel", onUp);
+			kick();
+		});
+		return { sync };
+	}
+
 	function settingsContent() {
 		const el = (tag, className, text) => {
 			const node = document.createElement(tag);
@@ -1300,7 +1462,14 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 			});
 			row.append(name, group);
 			choices.append(row);
-			return () => buttons.forEach(([id, button]) => button.setAttribute("aria-checked", String(id === current())));
+			const lens = segmentedLens(group, buttons.map(([, button]) => button), (index) => {
+				safe(() => apply(modes[index][0]));
+				update();
+			});
+			return () => {
+				buttons.forEach(([id, button]) => button.setAttribute("aria-checked", String(id === current())));
+				lens.sync();
+			};
 		});
 		const reset = el("button", "lm-settings-reset", "Reset");
 		reset.type = "button";

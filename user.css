@@ -2021,19 +2021,47 @@ html[data-cinema-npv-postEnter][data-lm-lyrics-view]:not([data-right-sidebar-ope
 	text-overflow: ellipsis;
 	transition: background-color 0.15s ease;
 }
-.lm-segmented button:hover {
+.lm-segmented button:not([aria-checked="true"]):hover {
 	background: var(--lm-fill);
 }
-/* As in iOS segmented controls: the choice is a raised neutral segment, readable whatever the artwork's accent */
+.lm-segmented {
+	position: relative;
+}
 .lm-segmented button[aria-checked="true"] {
-	background: rgba(255, 255, 255, 0.2);
 	color: var(--lm-label);
 	font-weight: 600;
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
-:root[data-lm-theme="light"] .lm-segmented button[aria-checked="true"] {
-	background: #fff;
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+/* The selection is a lens of glass (theme.js, segmentedLens) in two layers that move together: under the labels, a
+   raised neutral segment at rest (readable whatever the artwork's accent) that clears while the lens travels or is
+   held; over them, only the glass: a rim that brightens, and the refraction of the label it passes over */
+.lm-segmented button {
+	position: relative;
+	z-index: 1;
+}
+.lm-segmented-lens {
+	--lm-lens-open: 0;
+	position: absolute;
+	top: 0;
+	left: 0;
+	border-radius: 8px;
+	pointer-events: none;
+	transform-origin: 50% 50%;
+	will-change: transform;
+}
+.lm-segmented-lens-fill {
+	z-index: 0;
+	background: rgba(255, 255, 255, calc(0.2 - 0.16 * var(--lm-lens-open)));
+	box-shadow: 0 calc(1px + 5px * var(--lm-lens-open)) calc(3px + 12px * var(--lm-lens-open)) rgba(0, 0, 0, calc(0.25 + 0.1 * var(--lm-lens-open)));
+}
+:root[data-lm-theme="light"] .lm-segmented-lens-fill {
+	background: rgba(255, 255, 255, calc(1 - 0.85 * var(--lm-lens-open)));
+	box-shadow: 0 calc(1px + 5px * var(--lm-lens-open)) calc(3px + 12px * var(--lm-lens-open)) rgba(0, 0, 0, calc(0.12 + 0.08 * var(--lm-lens-open)));
+}
+.lm-segmented-lens-glass {
+	z-index: 2;
+	box-shadow:
+		inset 0 0 0 1px rgba(255, 255, 255, calc(0.1 + 0.45 * var(--lm-lens-open))),
+		inset 0 1px 1px rgba(255, 255, 255, calc(0.15 + 0.35 * var(--lm-lens-open)));
 }
 .lm-segmented button:focus-visible,
 .lm-settings-reset:focus-visible {
