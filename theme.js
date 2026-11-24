@@ -1397,7 +1397,7 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 	// a bounded bitmap keeps a wide player inexpensive. Chromium supports SVG backdrop filters.
 	function startGlassOptics() {
 		if (!CSS.supports("backdrop-filter", 'url("#lm-optics-probe")')) return;
-		const selector = ".main-globalNav-historyButtons, .main-globalNav-link-icon, .custom-navlinks-scrollable_container, .main-globalNav-searchInputContainer, .main-globalNav-contentRight > .main-actionButtons, [data-testid='user-widget-link'], .main-nowPlayingBar-container";
+		const selector = ".main-globalNav-historyButtons, .main-globalNav-link-icon, .custom-navlinks-scrollable_container, .main-globalNav-searchInputContainer, .main-globalNav-contentRight > .main-actionButtons:not(.main-globalNav-contentRight), .main-globalNav-contentRight .spicetify-topbar-button, [data-testid='user-widget-link'], .main-nowPlayingBar-container";
 		const ns = "http://www.w3.org/2000/svg";
 		const svg = document.createElementNS(ns, "svg");
 		svg.id = "lm-glass-optics";

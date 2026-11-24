@@ -283,7 +283,8 @@ html[data-lm-theme="light"] .Root__right-sidebar aside.spicy-dynamic-bg-in-this 
 .main-globalNav-link-icon,
 .custom-navlinks-scrollable_container,
 .main-globalNav-searchInputContainer::before,
-.main-globalNav-contentRight > .main-actionButtons,
+.main-globalNav-contentRight > .main-actionButtons:not(.main-globalNav-contentRight),
+.main-globalNav-contentRight .spicetify-topbar-button,
 [data-testid="user-widget-link"],
 .main-nowPlayingBar-container {
 	background: var(--lm-glass-regular-bg) !important;
@@ -556,7 +557,8 @@ html.spotify__os--is-macos .main-globalNav-historyButtonsWrapper > * > :first-ch
 .main-globalNav-searchInputKBDWrapper * {
 	background: none !important;
 }
-.main-globalNav-contentRight > .main-actionButtons {
+.main-globalNav-contentRight > .main-actionButtons:not(.main-globalNav-contentRight),
+.main-globalNav-contentRight .spicetify-topbar-button {
 	width: auto !important;
 	height: 40px !important;
 	padding: 0 6px !important;
@@ -1878,7 +1880,7 @@ html[data-cinema-npv-postEnter][data-lm-lyrics-view]:not([data-right-sidebar-ope
 	.lm-backdrop-canvas {
 		display: none !important;
 	}
-	:is(.Root__nav-bar, .Root__right-sidebar-peek, .main-nowPlayingBar-container, .main-globalNav-historyButtons, .main-globalNav-link-icon, .custom-navlinks-scrollable_container, .main-globalNav-searchInputContainer, .main-globalNav-contentRight > .main-actionButtons, [data-testid="user-widget-link"], [data-tippy-root], .main-topBar-background, .main-card-PlayButtonContainer [class*="button-primary__inner"], [class*="-legacy-tooltip"], [class*="-tooltip "], [class$="-tooltip"], .notistack-Snackbar [class*="legacy-box--elevated"]) {
+	:is(.Root__nav-bar, .Root__right-sidebar-peek, .main-nowPlayingBar-container, .main-globalNav-historyButtons, .main-globalNav-link-icon, .custom-navlinks-scrollable_container, .main-globalNav-searchInputContainer, .main-globalNav-contentRight > .main-actionButtons:not(.main-globalNav-contentRight), .main-globalNav-contentRight .spicetify-topbar-button, [data-testid="user-widget-link"], [data-tippy-root], .main-topBar-background, .main-card-PlayButtonContainer [class*="button-primary__inner"], [class*="-legacy-tooltip"], [class*="-tooltip "], [class$="-tooltip"], .notistack-Snackbar [class*="legacy-box--elevated"]) {
 		backdrop-filter: none !important;
 	}
 }
@@ -1937,7 +1939,7 @@ html[data-cinema-npv-postEnter][data-lm-lyrics-view]:not([data-right-sidebar-ope
 	:root[data-lm-panels="liquid"] :is(.Root__nav-bar, .Root__right-sidebar-peek) {
 		backdrop-filter: blur(10px) saturate(150%);
 	}
-	:root[data-lm-panels="liquid"] :is(.main-globalNav-historyButtons, .main-globalNav-link-icon, .custom-navlinks-scrollable_container, .main-globalNav-contentRight > .main-actionButtons, [data-testid="user-widget-link"], .main-nowPlayingBar-container),
+	:root[data-lm-panels="liquid"] :is(.main-globalNav-historyButtons, .main-globalNav-link-icon, .custom-navlinks-scrollable_container, .main-globalNav-contentRight > .main-actionButtons:not(.main-globalNav-contentRight), .main-globalNav-contentRight .spicetify-topbar-button, [data-testid="user-widget-link"], .main-nowPlayingBar-container),
 	:root[data-lm-panels="liquid"] .main-globalNav-searchInputContainer::before {
 		background-image: var(--lm-glass-sheen) !important;
 		backdrop-filter: var(--lm-glass-optics, blur(3px)) saturate(150%);
@@ -1958,7 +1960,7 @@ html[data-cinema-npv-postEnter][data-lm-lyrics-view]:not([data-right-sidebar-ope
 
 /* Search owns its blur on ::before; disabling the container's filter alone leaves that material blurred. */
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
-	:is(.main-globalNav-historyButtons, .main-globalNav-link-icon, .custom-navlinks-scrollable_container, .main-globalNav-contentRight > .main-actionButtons, [data-testid="user-widget-link"], .main-nowPlayingBar-container),
+	:is(.main-globalNav-historyButtons, .main-globalNav-link-icon, .custom-navlinks-scrollable_container, .main-globalNav-contentRight > .main-actionButtons:not(.main-globalNav-contentRight), .main-globalNav-contentRight .spicetify-topbar-button, [data-testid="user-widget-link"], .main-nowPlayingBar-container),
 	.main-globalNav-searchInputContainer::before {
 		backdrop-filter: none !important;
 	}
