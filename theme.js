@@ -638,7 +638,15 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 		return hooks.map(([name]) => name).filter((name) => !isPresent(name));
 	}
 
+	// Android LiquidMusic's Frost.LENS: strongest at the rim, fading inward without the old sine's fold.
+	// Keep the pull below half the band so the sampled content compresses smoothly instead of mirroring.
+	function liquidLensBend(depth, band) {
+		const edge = band > 0 && depth > 0 && depth < band ? 1 - depth / band : 0;
+		return edge * edge;
+	}
+
 	const helpers = {
+		liquidLensBend,
 		PILL_HOOKS,
 		CLASS_HOOKS,
 		NPV_ROOT_HOOKS,
@@ -1348,7 +1356,10 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 	}
 
 	// An optical layer on floating controls, never a filter on their foreground. The displacement map is
-	// neutral in the centre and bends the backdrop along a rounded edge. Rebuild only on size changes;
+	// neutral in the centre and bends the backdrop along a rounded edge. Keep the mobile material's 3px
+	// frost in the body, but reveal a sharper refracted rim so that the frost doesn't erase the lens.
+	// Uses morphe-patches-liquidmusic's LiquidMusic.java: Frost.LENS, with a wider band for desktop.
+	// Rebuild only on size changes;
 	// a bounded bitmap keeps a wide player inexpensive. Chromium supports SVG backdrop filters.
 	function startGlassOptics() {
 		if (!CSS.supports("backdrop-filter", 'url("#lm-optics-probe")')) return;
@@ -1386,7 +1397,9 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 			const ctx = canvas.getContext("2d");
 			if (!ctx) return;
 			const map = ctx.createImageData(canvas.width, canvas.height);
-			const band = Math.min(12, radius * 0.7);
+			const band = Math.min(24, radius * 0.85);
+			const strength = band * 0.45;
+			const margin = Math.ceil(Math.max(3 * 3, strength + 2));
 			for (let y = 0; y < canvas.height; y++) {
 				for (let x = 0; x < canvas.width; x++) {
 					const px = (x + 0.5) * width / canvas.width;
@@ -1395,18 +1408,22 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 					const dy = py - Math.max(radius, Math.min(height - radius, py));
 					const length = Math.hypot(dx, dy);
 					const depth = radius - length;
-					// Monotonic edge profile, as on Android: no mirrored fold near the rim.
-					const bend = band > 0 && depth < band ? Math.pow(1 - Math.max(0, depth) / band, 2) * 0.45 * band * 255 / 18 : 0;
+					const bend = liquidLensBend(depth, band);
 					const i = (y * canvas.width + x) * 4;
-					map.data[i] = Math.round(128 + (length ? dx / length : 0) * bend);
-					map.data[i + 1] = Math.round(128 + (length ? dy / length : 0) * bend);
-					map.data[i + 2] = 128;
+					map.data[i] = Math.round(127.5 + (length ? dx / length : 0) * bend * 127.5);
+					map.data[i + 1] = Math.round(127.5 + (length ? dy / length : 0) * bend * 127.5);
+					// The unused blue channel is the blend mask: clear refracted rim, lightly frosted centre.
+					map.data[i + 2] = Math.round(Math.sqrt(bend) * 255);
 					map.data[i + 3] = 255;
 				}
 			}
 			ctx.putImageData(map, 0, 0);
-			entry.filter.setAttribute("width", width);
-			entry.filter.setAttribute("height", height);
+			// Both the blur and the lens sample beyond the rim; leave room so their output isn't cut off there.
+			entry.filter.setAttribute("x", -margin);
+			entry.filter.setAttribute("y", -margin);
+			entry.filter.setAttribute("width", width + margin * 2);
+			entry.filter.setAttribute("height", height + margin * 2);
+			entry.displacement.setAttribute("scale", strength * 2);
 			entry.image.setAttribute("width", width);
 			entry.image.setAttribute("height", height);
 			entry.image.setAttribute("href", canvas.toDataURL());
@@ -1430,6 +1447,7 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 				if (!entries.has(el)) {
 					const filter = create("filter", { id: `lm-lens-${++serial}`, x: 0, y: 0, width: 1, height: 1, filterUnits: "userSpaceOnUse", "color-interpolation-filters": "sRGB" });
 					const image = create("feImage", { x: 0, y: 0, width: "100%", height: "100%", preserveAspectRatio: "none", result: "lens" });
+					const displacement = create("feDisplacementMap", { in: "rimSource", in2: "lens", scale: "0", xChannelSelector: "R", yChannelSelector: "G", result: "refracted" });
 					filter.append(
 						image,
 						create("feGaussianBlur", { in: "SourceGraphic", stdDeviation: "3", result: "soft" }),
@@ -1468,6 +1486,7 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 		applyPanelsMode();
 		safe(registerSettingsMenu);
 		safe(watchLyricsViews);
+		safe(keepIvLyricsMenusAbovePill);
 		Spicetify.Player.addEventListener("onplaypause", () => safe(syncAnimation));
 		Spicetify.Player.addEventListener("onprogress", () => loop.id && safe(applySpeed));
 		document.addEventListener("visibilitychange", () => safe(syncAnimation));

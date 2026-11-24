@@ -15,8 +15,10 @@ player, and an accent colour taken from whatever is playing.
     survives restarts; the default follows the scheme selected in Spicetify or the Marketplace.
   - **Surfaces**: *Frosted glass* (default), *Liquid Glass* or *Clear, like Spicy Lyrics*. Liquid Glass uses clearer
     panels, a less blurred artwork backdrop and refraction along the rounded edges of floating controls and the
-    player. The centre stays sharp and the text is never displaced. It approximates Apple's material using SVG
-    backdrop filters on Chromium, with a light-blur fallback. Clear panels show the backdrop untinted, darkened in
+    player. Like the mobile version, its refraction is strongest at the rim and fades smoothly inward, over a
+    light 3px frost at the centre. A wider, sharper rim keeps the refraction visible on desktop; the text stays
+    sharp and is never displaced. SVG backdrop filters on Chromium approximate
+    Apple's material, with the same light frost as a fallback. Clear panels show the backdrop untinted, darkened in
     dark mode and lifted toward white in light mode. Sticky bars and menus stay frosted for readability.
   - **Background**: *Blurred artwork* (default), *Kawarp* or *Kawarp, animated*.
     [Kawarp](https://github.com/better-lyrics/kawarp) draws the artwork with WebGL, Kawase blur and domain warping,

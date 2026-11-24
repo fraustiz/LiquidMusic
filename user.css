@@ -1863,8 +1863,8 @@ html[data-cinema-npv-postEnter][data-lm-lyrics-view]:not([data-right-sidebar-ope
 }
 
 /* 11 · Liquid Glass — opt-in; the original frosted and clear modes stay unchanged.
-   theme.js supplies a rounded displacement map on the backdrop only. A light frost softens the backdrop; text is
-   never displaced. Without SVG backdrop support the material falls back to a light blur. */
+   theme.js blends a sharper refracted rim into the mobile material's light 3px frost at the centre.
+   Text is never displaced or blurred. Without SVG backdrop support it keeps the same light frost. */
 @media (prefers-reduced-transparency: no-preference) and (prefers-contrast: no-preference) {
 	:root[data-lm-panels="liquid"] {
 		--lm-bg-content: rgba(22, 22, 24, 0.28);
