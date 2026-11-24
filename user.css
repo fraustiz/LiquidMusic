@@ -733,6 +733,11 @@ html[data-lm-theme="light"] .main-nowPlayingBar-nowPlayingBar::after {
 .main-nowPlayingBar-left .main-trackInfo-container > :last-child:not(.main-trackInfo-artists, .main-trackInfo-name) {
 	display: none;
 }
+/* Spotify 1.3.10 puts that badge on the artists' line, and adds an empty line before the title */
+.main-nowPlayingBar-left .main-trackInfo-artists > :has([data-testid="context-item-info-quality"]):not(:has([data-testid="now-playing-widget-v2-byline"])),
+.main-nowPlayingBar-left .main-trackInfo-container > [data-npb-secondary]:empty {
+	display: none;
+}
 /* "Hide song" stays reachable from the context menu and the right panel: the LCD keeps only "Add to Liked" */
 .main-nowPlayingBar-left .main-nowPlayingWidget-actionButtonWrapper [role="switch"] {
 	display: none !important;

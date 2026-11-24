@@ -464,7 +464,8 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 		["main-nowPlayingBar-container", "[data-testid='now-playing-bar']"],
 		["main-nowPlayingBar-nowPlayingBar", "[data-testid='now-playing-bar'] > :has([data-testid='player-controls'])"],
 		// Spotify 1.3.6 renamed the widget now-playing-widget-v2: its artwork sits in cover-art-container and the artists
-		// are the second line of the titles' column
+		// are the second line of the titles' column. 1.3.10 adds an empty line before the title and puts the quality
+		// badge beside the artists (now-playing-widget-v2-byline): the v2 lines are found by what they hold
 		["main-nowPlayingBar-left", ".main-nowPlayingBar-nowPlayingBar > :has([data-testid='now-playing-widget'], [data-testid='now-playing-widget-v2'])"],
 		["main-nowPlayingBar-center", ".main-nowPlayingBar-nowPlayingBar > :has([data-testid='player-controls'])"],
 		["main-nowPlayingBar-right", ".main-nowPlayingBar-nowPlayingBar > :has([data-testid='volume-bar'], [data-testid='control-button-queue'])"],
