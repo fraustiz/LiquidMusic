@@ -1965,3 +1965,273 @@ html[data-cinema-npv-postEnter][data-lm-lyrics-view]:not([data-right-sidebar-ope
 		backdrop-filter: none !important;
 	}
 }
+
+/* 12 · Settings window — opened from the top bar or the profile menu (theme.js, openSettings).
+   A preview of the window on the current artwork, beside the choices; both follow each choice at once */
+.lm-settings {
+	display: grid;
+	grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+	gap: 24px;
+	align-items: start;
+	color: var(--lm-label);
+}
+@media (max-width: 760px) {
+	.lm-settings {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+.lm-settings-choices {
+	display: grid;
+	gap: 14px;
+}
+.lm-settings-row {
+	display: grid;
+	gap: 6px;
+}
+.lm-settings-label {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--lm-label-2);
+}
+.lm-segmented {
+	display: flex;
+	gap: 2px;
+	padding: 2px;
+	border-radius: 10px;
+	background: var(--lm-fill);
+}
+.lm-segmented button {
+	flex: 1;
+	min-width: 0;
+	padding: 6px 8px;
+	border: 0;
+	border-radius: 8px;
+	background: transparent;
+	color: var(--lm-label);
+	font: inherit;
+	font-size: 13px;
+	cursor: pointer;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	transition: background-color 0.15s ease;
+}
+.lm-segmented button:hover {
+	background: var(--lm-fill);
+}
+/* As in iOS segmented controls: the choice is a raised neutral segment, readable whatever the artwork's accent */
+.lm-segmented button[aria-checked="true"] {
+	background: rgba(255, 255, 255, 0.2);
+	color: var(--lm-label);
+	font-weight: 600;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+:root[data-lm-theme="light"] .lm-segmented button[aria-checked="true"] {
+	background: #fff;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+.lm-segmented button:focus-visible,
+.lm-settings-reset:focus-visible {
+	outline: 2px solid var(--lm-accent);
+	outline-offset: 2px;
+}
+.lm-settings-reset {
+	justify-self: start;
+	margin-top: 4px;
+	padding: 6px 14px;
+	border: 0;
+	border-radius: 999px;
+	background: var(--lm-fill);
+	color: var(--lm-label);
+	font: inherit;
+	font-size: 13px;
+	cursor: pointer;
+}
+
+/* The preview: a small window with its two panels and the player, over the artwork */
+.lm-preview {
+	--p-bg: #1c1c1e;
+	--p-panel: rgba(30, 30, 32, 0.55);
+	--p-line: rgba(255, 255, 255, 0.5);
+	--p-edge: rgba(255, 255, 255, 0.1);
+	position: relative;
+	aspect-ratio: 16 / 10;
+	overflow: hidden;
+	border-radius: 14px;
+	background: var(--p-bg);
+	box-shadow: inset 0 0 0 1px var(--p-edge);
+	isolation: isolate;
+}
+.lm-preview[data-theme="light"] {
+	--p-bg: #f2f2f7;
+	--p-panel: rgba(255, 255, 255, 0.6);
+	--p-line: rgba(0, 0, 0, 0.45);
+	--p-edge: rgba(0, 0, 0, 0.08);
+}
+.lm-preview-art {
+	position: absolute;
+	inset: -20%;
+	z-index: -1;
+	background: center / cover no-repeat;
+	filter: blur(24px) saturate(1.4) brightness(0.7);
+	transition: filter 0.3s ease;
+}
+.lm-preview[data-theme="light"] .lm-preview-art {
+	filter: blur(24px) saturate(1.4) brightness(1.2) contrast(0.7);
+}
+.lm-preview:is([data-background="static"], [data-background="animated"]) .lm-preview-art {
+	filter: blur(16px) saturate(2.5) brightness(0.65);
+	transform: scale(1.3) rotate(-8deg);
+}
+.lm-preview[data-background="animated"] .lm-preview-art {
+	animation: lm-preview-flow 9s ease-in-out infinite alternate;
+}
+@keyframes lm-preview-flow {
+	to {
+		transform: scale(1.5) rotate(12deg) translate(4%, -3%);
+	}
+}
+.lm-preview-panel {
+	position: absolute;
+	top: 6%;
+	bottom: 6%;
+	display: flex;
+	flex-direction: column;
+	gap: 6%;
+	padding: 4%;
+	border-radius: 10px;
+	background: var(--p-panel);
+	backdrop-filter: blur(12px) saturate(160%);
+	box-shadow: inset 0 0 0 1px var(--p-edge);
+	transition: background-color 0.3s ease;
+}
+.lm-preview-side {
+	left: 3%;
+	width: 24%;
+}
+.lm-preview-main {
+	left: 30%;
+	right: 3%;
+}
+.lm-preview-panel i {
+	display: block;
+	height: 6px;
+	width: 70%;
+	border-radius: 3px;
+	background: var(--p-line);
+	opacity: 0.6;
+}
+.lm-preview-main i:first-child {
+	height: 10px;
+	width: 45%;
+	opacity: 1;
+}
+.lm-preview[data-glass="liquid"] .lm-preview-panel {
+	background: color-mix(in srgb, var(--p-panel) 45%, transparent);
+	backdrop-filter: blur(4px) saturate(150%);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.4);
+}
+.lm-preview[data-glass="clear"] .lm-preview-panel {
+	background: transparent;
+	backdrop-filter: none;
+	box-shadow: none;
+}
+/* The player: controls · LCD · extras, or LCD · controls · extras; a pill or the whole width */
+.lm-preview-player {
+	position: absolute;
+	bottom: 4%;
+	left: 50%;
+	z-index: 1;
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	grid-template-areas: "controls lcd extra";
+	align-items: center;
+	gap: 6px;
+	width: 62%;
+	height: 13%;
+	padding: 0 3%;
+	border-radius: 999px;
+	background: var(--p-panel);
+	backdrop-filter: blur(12px) saturate(160%);
+	box-shadow: inset 0 0 0 1px var(--p-edge), 0 4px 12px rgba(0, 0, 0, 0.25);
+	transform: translateX(-50%);
+	transition: width 0.3s ease;
+}
+.lm-preview[data-player="full"] .lm-preview-player {
+	width: 94%;
+}
+.lm-preview[data-controls="controls-centre"] .lm-preview-player {
+	grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+	grid-template-areas: "lcd controls extra";
+}
+.lm-preview[data-glass="liquid"] .lm-preview-player {
+	background: color-mix(in srgb, var(--p-panel) 45%, transparent);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.4), 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+.lm-preview-controls {
+	grid-area: controls;
+	display: flex;
+	align-items: center;
+	gap: 5px;
+}
+.lm-preview-controls i {
+	display: block;
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--p-line);
+}
+.lm-preview-controls i:nth-child(2) {
+	width: 12px;
+	height: 12px;
+	background: var(--lm-accent);
+}
+.lm-preview-lcd {
+	grid-area: lcd;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+	max-width: 100%;
+	height: 75%;
+	padding: 0 6px;
+	border-radius: 6px;
+	background: rgba(120, 120, 128, 0.2);
+}
+.lm-preview[data-controls="controls-centre"] .lm-preview-lcd {
+	justify-self: start;
+	width: 100%;
+}
+.lm-preview-cover {
+	flex: none;
+	height: 70%;
+	aspect-ratio: 1;
+	border-radius: 3px;
+	background: center / cover no-repeat var(--p-line);
+}
+.lm-preview-title {
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-size: 10px;
+	font-weight: 600;
+	color: var(--p-line);
+	filter: brightness(1.6);
+}
+.lm-preview[data-theme="light"] .lm-preview-title {
+	filter: none;
+}
+.lm-preview-extra {
+	grid-area: extra;
+	justify-self: end;
+	width: 34px;
+	height: 4px;
+	border-radius: 2px;
+	background: var(--p-line);
+}
+@media (prefers-reduced-motion: reduce) {
+	.lm-preview[data-background="animated"] .lm-preview-art {
+		animation: none;
+	}
+}

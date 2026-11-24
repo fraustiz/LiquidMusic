@@ -1206,52 +1206,123 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 		refreshSettingsMenu();
 	}
 
-	// One profile-menu entry, with independent radio groups and summaries of the current choices.
-	function registerSettingsMenu() {
-		const { Menu } = Spicetify;
-		if (!Menu?.SubMenu || !Menu.Item) return warn("Spicetify.Menu missing, the settings are not in the menu");
-		const groups = [];
-		const group = (title, modes, current, apply) => {
-			const items = modes.map(([id, label]) => new Menu.Item(label, id === current(), () => {
-				apply(id);
-				refreshSettingsMenu();
-			}));
-			const submenu = new Menu.SubMenu(title, items);
-			groups.push(() => {
-				const selected = current();
-				items.forEach((item, index) => item.setState(modes[index][0] === selected));
-				submenu.name = `${title}: ${modes.find(([id]) => id === selected)?.[1] || modes[0][1]}`;
-			});
-			return submenu;
-		};
-		const appearance = group("Mode", APPEARANCE_MODES, appearanceMode, (mode) => {
+	// The settings window: a button in the top bar (and an entry in the profile menu) opens it. Each choice applies
+	// at once, to the app and to the small preview beside the choices, drawn on the current artwork.
+	const SETTINGS = [
+		["Mode", APPEARANCE_MODES, appearanceMode, (mode) => {
 			store(APPEARANCE_KEY, mode);
 			applyMode();
-		});
-		const surfaces = group("Glass", PANEL_MODES, panelsMode, setPanelsMode);
-		const background = group("Background", BG_MODES, backgroundMode, setBackgroundMode);
-		const layout = group("Controls", PLAYER_LAYOUTS, playerLayout, (mode) => {
+		}],
+		["Glass", PANEL_MODES, panelsMode, (mode) => setPanelsMode(mode)],
+		["Background", BG_MODES, backgroundMode, (mode) => setBackgroundMode(mode)],
+		["Controls", PLAYER_LAYOUTS, playerLayout, (mode) => {
 			store(PLAYER_LAYOUT_KEY, mode);
 			applyPlayerMode();
-		});
-		const width = group("Player", PLAYER_WIDTHS, playerWidth, (mode) => {
+		}],
+		["Player", PLAYER_WIDTHS, playerWidth, (mode) => {
 			store(PLAYER_WIDTH_KEY, mode);
 			applyPlayerMode();
+		}],
+	];
+	// A music note whose head is a glass bead, with its highlight. Drawn as a mask and painted once: the button's
+	// colour is translucent, and overlapping strokes came out lighter
+	const SETTINGS_ICON = '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><mask id="lm-icon-note" maskUnits="userSpaceOnUse" x="0" y="0" width="16" height="16"><path d="M9.05 11.5V2.6c.5 1.9 4.2 2.3 4.2 5.5" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="5.75" cy="11.75" r="3.25" fill="#fff"/><path d="M4.1 11.2a1.8 1.8 0 0 1 1.5-1.3" fill="none" stroke="#000" stroke-opacity=".5" stroke-width="1" stroke-linecap="round"/></mask><rect width="16" height="16" fill="currentColor" mask="url(#lm-icon-note)"/></svg>';
+
+	function resetSettings() {
+		store(APPEARANCE_KEY, APPEARANCE_MODES[0][0]);
+		store(PANELS_KEY, PANEL_MODES[0][0]);
+		store(PLAYER_LAYOUT_KEY, PLAYER_LAYOUTS[0][0]);
+		store(PLAYER_WIDTH_KEY, PLAYER_WIDTHS[0][0]);
+		applyPlayerMode();
+		setBackgroundMode(BG_MODES[0][0]);
+		applyPanelsMode();
+		applyMode();
+	}
+
+	function settingsContent() {
+		const el = (tag, className, text) => {
+			const node = document.createElement(tag);
+			if (className) node.className = className;
+			if (text) node.textContent = text;
+			return node;
+		};
+		const box = el("div", "lm-settings");
+		const preview = el("div", "lm-preview");
+		preview.setAttribute("aria-hidden", "true");
+		const art = el("div", "lm-preview-art");
+		const side = el("div", "lm-preview-panel lm-preview-side");
+		const main = el("div", "lm-preview-panel lm-preview-main");
+		for (let i = 0; i < 3; i++) side.append(el("i"));
+		for (let i = 0; i < 4; i++) main.append(el("i"));
+		const player = el("div", "lm-preview-player");
+		const controls = el("div", "lm-preview-controls");
+		for (let i = 0; i < 3; i++) controls.append(el("i"));
+		const lcd = el("div", "lm-preview-lcd");
+		const cover = el("div", "lm-preview-cover");
+		const title = el("div", "lm-preview-title", Spicetify.Player.data?.item?.name || "LiquidMusic");
+		lcd.append(cover, title);
+		player.append(controls, lcd, el("div", "lm-preview-extra"));
+		preview.append(art, side, main, player);
+
+		const choices = el("div", "lm-settings-choices");
+		const rows = SETTINGS.map(([label, modes, current, apply]) => {
+			const row = el("div", "lm-settings-row");
+			const name = el("span", "lm-settings-label", label);
+			const group = el("div", "lm-segmented");
+			group.setAttribute("role", "radiogroup");
+			group.setAttribute("aria-label", label);
+			const buttons = modes.map(([id, text]) => {
+				const button = el("button", "", text);
+				button.type = "button";
+				button.setAttribute("role", "radio");
+				button.addEventListener("click", () => {
+					safe(() => apply(id));
+					update();
+				});
+				group.append(button);
+				return [id, button];
+			});
+			row.append(name, group);
+			choices.append(row);
+			return () => buttons.forEach(([id, button]) => button.setAttribute("aria-checked", String(id === current())));
 		});
-		const reset = new Menu.Item("Reset", false, () => {
-			store(APPEARANCE_KEY, "default");
-			store(PANELS_KEY, "glass");
-			store(PLAYER_LAYOUT_KEY, PLAYER_LAYOUTS[0][0]);
-			store(PLAYER_WIDTH_KEY, PLAYER_WIDTHS[0][0]);
-			applyPlayerMode();
-			setBackgroundMode("classic");
-			applyPanelsMode();
-			applyMode();
-			refreshSettingsMenu();
+		const reset = el("button", "lm-settings-reset", "Reset");
+		reset.type = "button";
+		reset.addEventListener("click", () => {
+			safe(resetSettings);
+			update();
 		});
-		refreshSettingsMenu = () => groups.forEach((refresh) => refresh());
-		refreshSettingsMenu();
-		new Menu.SubMenu("LiquidMusic", [appearance, surfaces, background, layout, width, reset]).register();
+		choices.append(reset);
+		box.append(preview, choices);
+
+		function update() {
+			rows.forEach((refresh) => refresh());
+			Object.assign(preview.dataset, {
+				theme: root.dataset.lmTheme || "dark",
+				glass: panelsMode(),
+				background: backgroundMode(),
+				controls: playerLayout(),
+				player: playerWidth(),
+			});
+			const url = state.backdropUrl;
+			art.style.backgroundImage = cover.style.backgroundImage = url ? `url("${url}")` : "none";
+		}
+		update();
+		return { box, update };
+	}
+
+	function openSettings() {
+		if (!Spicetify.PopupModal?.display) return warn("Spicetify.PopupModal missing, the settings window can't open");
+		const { box, update } = settingsContent();
+		refreshSettingsMenu = update;
+		Spicetify.PopupModal.display({ title: "LiquidMusic", content: box, isLarge: true });
+	}
+
+	function registerSettingsMenu() {
+		const { Menu, Topbar } = Spicetify;
+		if (Topbar?.Button) new Topbar.Button("LiquidMusic settings", SETTINGS_ICON, () => safe(openSettings), false, true);
+		if (Menu?.Item) new Menu.Item("LiquidMusic", false, () => safe(openSettings)).register();
+		else if (!Topbar?.Button) warn("Spicetify.Menu and Topbar missing, the settings can't be opened");
 	}
 
 	// ---- Loading the artwork into Kawarp

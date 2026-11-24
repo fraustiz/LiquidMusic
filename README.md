@@ -9,7 +9,8 @@ player, and an accent colour taken from whatever is playing.
 
 - **Glass everywhere.** The library, side panel, toolbar, menus, search field and sticky bars take on the
   colours of the current artwork. The original frosted-glass material remains the default.
-- **Settings.** Profile menu → **LiquidMusic**. Defaults come first:
+- **Settings.** The button in the top bar (or profile menu → **LiquidMusic**) opens a window with a live preview
+  on the current artwork; each choice applies at once. Defaults come first:
   - **Mode**: Default (your Spicetify scheme), System, Dark or Light.
   - **Glass**: Frosted, Liquid (clearer, with refraction on the edges) or Clear (no tint, like Spicy Lyrics).
   - **Background**: Blur (blurred artwork), Fluid ([Kawarp](https://github.com/better-lyrics/kawarp), like Spicy
