@@ -2269,15 +2269,19 @@ html[data-cinema-npv-postEnter][data-lm-lyrics-view]:not([data-right-sidebar-ope
 	}
 }
 
-/* Liquid Glass: the volume slider's knob is a small pill of glass whose rim bends the track under it; held, theme.js
-   opens it into a wider, clearer lens (startGlassKnob, after bilalgursen/liquid-glass's RangeSlider) */
+/* Liquid Glass: the sliders' knobs (song progress, volume…) are small pills of glass whose rim bends the track under
+   them; held, theme.js opens the knob into a wider, clearer lens (startGlassKnobs, after bilalgursen/liquid-glass's
+   RangeSlider) */
 @media (prefers-reduced-transparency: no-preference) and (prefers-contrast: no-preference) {
-	:root[data-lm-panels="liquid"] .main-nowPlayingBar-volumeBar .progress-bar__slider {
+	:root[data-lm-panels="liquid"] .playback-progressbar-isInteractive .progress-bar__slider {
 		--lm-knob-open: 0;
 		width: 24px;
 		height: 16px;
 		margin-left: -12px;
 		border-radius: 999px;
+		/* Spotify centres the knob with translateY(-50%), which the scale applies to as well: scaling from the track's
+		   line (the box's top edge) keeps the opened lens centred on it */
+		transform-origin: 50% 0;
 		background: rgba(255, 255, 255, calc(0.3 - 0.22 * var(--lm-knob-open)));
 		backdrop-filter: var(--lm-knob-optics, blur(1px)) saturate(160%);
 		box-shadow:

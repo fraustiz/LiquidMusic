@@ -1789,11 +1789,12 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 		document.addEventListener("pointercancel", release, true);
 	}
 
-	// The volume slider's knob, in Liquid Glass, is a small pill of glass whose rim bends the track under it; held, it
-	// opens into a wider, clearer lens on a spring, as in bilalgursen/liquid-glass's RangeSlider (MIT; theirs is
-	// WebGL). user.css draws it; this adds the refraction and the motion. Reduced motion: no opening.
-	const KNOB_SELECTOR = ".main-nowPlayingBar-volumeBar [data-testid='progress-bar']";
-	function startGlassKnob() {
+	// The sliders' knobs (song progress, volume…), in Liquid Glass, are small pills of glass whose rim bends the track
+	// under them; held, the knob opens into a wider, clearer lens on a spring, as in bilalgursen/liquid-glass's
+	// RangeSlider (MIT; theirs is WebGL). user.css draws them; this adds the refraction and the motion of the one held.
+	// Reduced motion: no opening.
+	const SLIDER_SELECTOR = ".playback-progressbar-isInteractive [data-testid='progress-bar']";
+	function startGlassKnobs() {
 		const motion = matchMedia(MOTION_QUERY);
 		const filter = refractionFilter(24, 16, 8, 0.5);
 		if (filter) {
@@ -1801,6 +1802,7 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 			root.style.setProperty("--lm-knob-optics", `url("#${filter.id}")`);
 		}
 		const open = { x: 0, v: 0 };
+		let slider = null;
 		let held = false;
 		let frame = 0;
 		let last = 0;
@@ -1810,7 +1812,7 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 			last = now;
 			const on = held && root.dataset.lmPanels === "liquid" && !motion.matches;
 			const moving = stepSpring(open, on ? 1 : 0, SWELL_SPRINGS.press, dt);
-			const knob = document.querySelector(`${KNOB_SELECTOR} .progress-bar__slider`);
+			const knob = slider?.querySelector(".progress-bar__slider");
 			if (knob) {
 				const p = Math.max(open.x, -0.12);
 				knob.style.scale = open.x ? `${(1 + 0.6 * p).toFixed(4)} ${(1 + 0.5 * p).toFixed(4)}` : "";
@@ -1823,7 +1825,16 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 			if (!frame) frame = requestAnimationFrame(tick);
 		};
 		document.addEventListener("pointerdown", (event) => {
-			if (event.button !== 0 || !event.target.closest?.(KNOB_SELECTOR)) return;
+			const target = event.button === 0 ? event.target.closest?.(SLIDER_SELECTOR) : null;
+			if (!target) return;
+			// Another slider grabbed before the last one settled: that knob goes back to rest at once
+			if (slider && slider !== target) {
+				const knob = slider.querySelector(".progress-bar__slider");
+				knob?.style.removeProperty("scale");
+				knob?.style.removeProperty("--lm-knob-open");
+				open.x = open.v = 0;
+			}
+			slider = target;
 			held = true;
 			kick();
 		}, true);
@@ -1966,7 +1977,7 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 		backdrop();
 		safe(startGlassOptics);
 		safe(startGlassSwell);
-		safe(startGlassKnob);
+		safe(startGlassKnobs);
 		applyMode();
 		matchMedia(LIGHT_QUERY).addEventListener("change", () => safe(applyMode));
 		matchMedia(SOLID_SURFACES_QUERY).addEventListener("change", () => safe(applyAccent));
