@@ -2290,3 +2290,25 @@ html[data-cinema-npv-postEnter][data-lm-lyrics-view]:not([data-right-sidebar-ope
 			0 calc(2px + 4px * var(--lm-knob-open)) calc(6px + 10px * var(--lm-knob-open)) rgba(0, 0, 0, 0.3);
 	}
 }
+
+/* Liquid Glass: each of the player's buttons gets a bubble of glass under the pointer, and theme.js swells it like the
+   top bar's icons (startGlassSwell); the player itself stays still. The play button is already a solid disc */
+@media (prefers-reduced-transparency: no-preference) and (prefers-contrast: no-preference) {
+	:root[data-lm-panels="liquid"] .main-nowPlayingBar-nowPlayingBar button:not([data-testid="control-button-playpause"], [data-testid="cover-art-button"]) {
+		border-radius: 999px;
+		transition: background-color 0.2s ease, box-shadow 0.2s ease;
+	}
+	:root[data-lm-panels="liquid"] .main-nowPlayingBar-nowPlayingBar button:not([data-testid="control-button-playpause"], [data-testid="cover-art-button"]):is(:hover, :focus-visible) {
+		background-color: rgba(255, 255, 255, 0.12) !important;
+		box-shadow:
+			inset 0 0 0 1px rgba(255, 255, 255, 0.28),
+			inset 0 1px 1px rgba(255, 255, 255, 0.35),
+			0 2px 8px rgba(0, 0, 0, 0.2);
+	}
+	:root[data-lm-panels="liquid"][data-lm-theme="light"] .main-nowPlayingBar-nowPlayingBar button:not([data-testid="control-button-playpause"], [data-testid="cover-art-button"]):is(:hover, :focus-visible) {
+		background-color: rgba(255, 255, 255, 0.55) !important;
+		box-shadow:
+			inset 0 0 0 1px rgba(255, 255, 255, 0.7),
+			0 2px 8px rgba(0, 0, 0, 0.12);
+	}
+}

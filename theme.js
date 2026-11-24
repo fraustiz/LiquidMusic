@@ -1719,6 +1719,9 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 	// pressed. The innermost surface swells: an icon's circle rather than its whole capsule. Not the player: its glass
 	// stays still under the pointer. Off without Liquid Glass, with reduced motion or solid surfaces.
 	const SWELL_SKIP = ".main-nowPlayingBar-container";
+	// The player's buttons swell one by one instead, each in its own bubble of glass (user.css)
+	const PLAYER_BUTTONS = ".main-nowPlayingBar-nowPlayingBar button:not([data-testid='cover-art-button'])";
+	const SWELL_SURFACES = `${GLASS_SURFACES}, ${PLAYER_BUTTONS}`;
 	function startGlassSwell() {
 		const states = new Map();
 		const motion = matchMedia(MOTION_QUERY);
@@ -1762,7 +1765,7 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 			if (!frame) frame = requestAnimationFrame(tick);
 		};
 		const surface = (target) => {
-			const el = enabled() ? target.closest?.(GLASS_SURFACES) : null;
+			const el = enabled() ? target.closest?.(SWELL_SURFACES) : null;
 			return el && !el.matches(SWELL_SKIP) ? el : null;
 		};
 		document.addEventListener("pointerover", (event) => {
