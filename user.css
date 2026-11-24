@@ -2312,3 +2312,33 @@ html[data-cinema-npv-postEnter][data-lm-lyrics-view]:not([data-right-sidebar-ope
 			0 2px 8px rgba(0, 0, 0, 0.12);
 	}
 }
+
+/* Liquid Glass: the play button is a disc of glass too, instead of Spotify's solid one, with a brighter rim and a
+   highlight; it swells like the other buttons (theme.js) */
+@media (prefers-reduced-transparency: no-preference) and (prefers-contrast: no-preference) {
+	:root[data-lm-panels="liquid"] [data-testid="control-button-playpause"] [class*="button-primary__inner"] {
+		background-color: rgba(255, 255, 255, 0.2) !important;
+		color: #fff !important;
+		backdrop-filter: blur(6px) saturate(180%);
+		box-shadow:
+			inset 0 0 0 1px rgba(255, 255, 255, 0.5),
+			inset 0 1.5px 1px rgba(255, 255, 255, 0.55),
+			inset 0 -2px 4px rgba(255, 255, 255, 0.12),
+			0 3px 10px rgba(0, 0, 0, 0.3);
+		transition: background-color 0.2s ease;
+	}
+	:root[data-lm-panels="liquid"] [data-testid="control-button-playpause"]:is(:hover, :focus-visible) [class*="button-primary__inner"] {
+		background-color: rgba(255, 255, 255, 0.3) !important;
+	}
+	:root[data-lm-panels="liquid"][data-lm-theme="light"] [data-testid="control-button-playpause"] [class*="button-primary__inner"] {
+		background-color: rgba(255, 255, 255, 0.7) !important;
+		color: #000 !important;
+		box-shadow:
+			inset 0 0 0 1px rgba(255, 255, 255, 0.9),
+			inset 0 1.5px 1px #fff,
+			0 3px 10px rgba(0, 0, 0, 0.15);
+	}
+	:root[data-lm-panels="liquid"][data-lm-theme="light"] [data-testid="control-button-playpause"]:is(:hover, :focus-visible) [class*="button-primary__inner"] {
+		background-color: rgba(255, 255, 255, 0.85) !important;
+	}
+}
