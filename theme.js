@@ -1505,6 +1505,107 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 		applyAccent();
 	}
 
+	// The floating controls drawn in Liquid Glass: they get the optical layer and the swell
+	const GLASS_SURFACES = ".main-globalNav-historyButtons, .main-globalNav-link-icon, .custom-navlinks-scrollable_container, .main-globalNav-searchInputContainer, .main-globalNav-contentRight > .main-actionButtons:not(.main-globalNav-contentRight), .main-globalNav-contentRight .spicetify-topbar-button, [data-testid='user-widget-link'], .main-nowPlayingBar-container";
+
+	// Springs and swell from bilalgursen/liquid-glass (physics.ts and engine.ts' SPRINGS, glass-layer.tsx; MIT,
+	// https://github.com/bilalgursen/liquid-glass). Width and height use different speeds and little damping, so
+	// they overshoot out of phase and the glass wobbles like a drop as it grows.
+	const SWELL_SPRINGS = { press: { omega: 16, zeta: 0.6 }, hoverX: { omega: 17, zeta: 0.42 }, hoverY: { omega: 12, zeta: 0.34 } };
+	function stepSpring(s, target, { omega, zeta }, dt) {
+		const d = s.x - target;
+		if (zeta > 0.9995) {
+			const b = s.v + omega * d;
+			const e = Math.exp(-omega * dt);
+			s.x = target + (d + b * dt) * e;
+			s.v = (s.v - omega * b * dt) * e;
+		} else {
+			const wd = omega * Math.sqrt(1 - zeta * zeta);
+			const b = (s.v + zeta * omega * d) / wd;
+			const e = Math.exp(-zeta * omega * dt);
+			const cos = Math.cos(wd * dt);
+			const sin = Math.sin(wd * dt);
+			const x = (d * cos + b * sin) * e;
+			s.x = target + x;
+			s.v = e * wd * (b * cos - d * sin) - zeta * omega * x;
+		}
+		const settled = Math.abs(s.x - target) < 5e-4 * Math.max(1, Math.abs(target)) && Math.abs(s.v) < 0.005;
+		if (settled) {
+			s.x = target;
+			s.v = 0;
+		}
+		return !settled;
+	}
+
+	// Liquid Glass surfaces swell under the pointer (up to 4%, 6px a side) and small ones grow a little more while
+	// pressed; the player doesn't, or it would bulge at every click on its buttons. The innermost surface swells: an
+	// icon's circle rather than its whole capsule. Off without Liquid Glass, with reduced motion or solid surfaces.
+	function startGlassSwell() {
+		const states = new Map();
+		const motion = matchMedia(MOTION_QUERY);
+		const solid = matchMedia(SOLID_SURFACES_QUERY);
+		const enabled = () => root.dataset.lmPanels === "liquid" && !motion.matches && !solid.matches;
+		let frame = 0;
+		let last = 0;
+		const state = (el) => {
+			if (!states.has(el)) states.set(el, { x: { x: 0, v: 0 }, y: { x: 0, v: 0 }, press: { x: 0, v: 0 }, hovered: false, pressed: false });
+			return states.get(el);
+		};
+		function tick(now) {
+			frame = 0;
+			const dt = last ? Math.min((now - last) / 1000, 1 / 20) : 1 / 60;
+			last = now;
+			const on = enabled();
+			let moving = false;
+			for (const [el, st] of states) {
+				const w = Math.max(el.offsetWidth, 1);
+				const h = Math.max(el.offsetHeight, 1);
+				const hover = on && st.hovered && el.isConnected ? 1 : 0;
+				const pressable = w <= 80 && h <= 80;
+				const a = stepSpring(st.x, hover, SWELL_SPRINGS.hoverX, dt);
+				const b = stepSpring(st.y, hover, SWELL_SPRINGS.hoverY, dt);
+				const c = stepSpring(st.press, on && st.pressed && pressable ? 1 : 0, SWELL_SPRINGS.press, dt);
+				if (!a && !b && !c && !hover && !st.press.x) {
+					el.style.scale = "";
+					states.delete(el);
+					continue;
+				}
+				const press = Math.min(0.04, 12 / w) * st.press.x;
+				const sx = 1 + Math.min(0.04, 12 / w) * st.x.x + press;
+				const sy = 1 + Math.min(0.04, 12 / h) * st.y.x + press;
+				el.style.scale = `${sx.toFixed(4)} ${sy.toFixed(4)}`;
+				moving = true;
+			}
+			if (moving) frame = requestAnimationFrame(tick);
+			else last = 0;
+		}
+		const kick = () => {
+			if (!frame) frame = requestAnimationFrame(tick);
+		};
+		document.addEventListener("pointerover", (event) => {
+			const el = enabled() ? event.target.closest?.(GLASS_SURFACES) : null;
+			for (const [other, st] of states) if (other !== el) st.hovered = false;
+			if (el) state(el).hovered = true;
+			kick();
+		}, true);
+		document.addEventListener("pointerout", (event) => {
+			if (event.relatedTarget) return;
+			for (const st of states.values()) st.hovered = st.pressed = false;
+			kick();
+		}, true);
+		document.addEventListener("pointerdown", (event) => {
+			const el = enabled() ? event.target.closest?.(GLASS_SURFACES) : null;
+			if (el) state(el).pressed = true;
+			kick();
+		}, true);
+		const release = () => {
+			for (const st of states.values()) st.pressed = false;
+			kick();
+		};
+		document.addEventListener("pointerup", release, true);
+		document.addEventListener("pointercancel", release, true);
+	}
+
 	// An optical layer on floating controls, never a filter on their foreground. The displacement map is
 	// neutral in the centre and magnifies the backdrop along the rounded edge (liquidLensOffset). The body keeps
 	// the mobile material's 3px frost; the rim stays sharp so the frost doesn't erase the lens.
@@ -1512,7 +1613,7 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 	// backdrop filters.
 	function startGlassOptics() {
 		if (!CSS.supports("backdrop-filter", 'url("#lm-optics-probe")')) return;
-		const selector = ".main-globalNav-historyButtons, .main-globalNav-link-icon, .custom-navlinks-scrollable_container, .main-globalNav-searchInputContainer, .main-globalNav-contentRight > .main-actionButtons:not(.main-globalNav-contentRight), .main-globalNav-contentRight .spicetify-topbar-button, [data-testid='user-widget-link'], .main-nowPlayingBar-container";
+		const selector = GLASS_SURFACES;
 		const ns = "http://www.w3.org/2000/svg";
 		const svg = document.createElementNS(ns, "svg");
 		svg.id = "lm-glass-optics";
@@ -1634,6 +1735,7 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 	function init() {
 		backdrop();
 		safe(startGlassOptics);
+		safe(startGlassSwell);
 		applyMode();
 		matchMedia(LIGHT_QUERY).addEventListener("change", () => safe(applyMode));
 		matchMedia(SOLID_SURFACES_QUERY).addEventListener("change", () => safe(applyAccent));
