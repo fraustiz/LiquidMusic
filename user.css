@@ -557,6 +557,11 @@ html.spotify__os--is-macos .main-globalNav-historyButtonsWrapper > * > :first-ch
 .main-globalNav-searchInputKBDWrapper * {
 	background: none !important;
 }
+/* theme.js moves its settings button among the custom apps' links: the same size as their icons */
+.custom-navlinks-scrollable_container .spicetify-topbar-button svg {
+	width: 24px;
+	height: 24px;
+}
 .main-globalNav-contentRight > .main-actionButtons:not(.main-globalNav-contentRight),
 .main-globalNav-contentRight .spicetify-topbar-button {
 	width: auto !important;

@@ -1226,7 +1226,7 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 	];
 	// A music note whose head is a glass bead, with its highlight. Drawn as a mask and painted once: the button's
 	// colour is translucent, and overlapping strokes came out lighter
-	const SETTINGS_ICON = '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><mask id="lm-icon-note" maskUnits="userSpaceOnUse" x="0" y="0" width="16" height="16"><path d="M9.05 11.5V2.6c.5 1.9 4.2 2.3 4.2 5.5" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="5.75" cy="11.75" r="3.25" fill="#fff"/><path d="M4.1 11.2a1.8 1.8 0 0 1 1.5-1.3" fill="none" stroke="#000" stroke-opacity=".5" stroke-width="1" stroke-linecap="round"/></mask><rect width="16" height="16" fill="currentColor" mask="url(#lm-icon-note)"/></svg>';
+	const SETTINGS_ICON = '<svg viewBox="1.25 1.55 13.5 13.5" width="16" height="16" aria-hidden="true"><mask id="lm-icon-note" maskUnits="userSpaceOnUse" x="0" y="0" width="16" height="16"><path d="M8.2 11.75V2.6c.5 1.9 4.2 2.3 4.2 5.5" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="5.9" cy="11.75" r="3.1" fill="#fff"/><path d="M4.3 11.2a1.7 1.7 0 0 1 1.45-1.25" fill="none" stroke="#000" stroke-opacity=".5" stroke-width="1" stroke-linecap="round"/></mask><rect width="16" height="16" fill="currentColor" mask="url(#lm-icon-note)"/></svg>';
 
 	function resetSettings() {
 		store(APPEARANCE_KEY, APPEARANCE_MODES[0][0]);
@@ -1318,9 +1318,38 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 		Spicetify.PopupModal.display({ title: "LiquidMusic", content: box, isLarge: true });
 	}
 
+	// The settings button joins the custom apps' links (ivLyrics, Marketplace…) at the end of their capsule. Spicetify
+	// puts it beside back and forward, where it stays when there are no custom apps. Their row is React's and can be
+	// rebuilt, so the button goes back whenever it is left out
+	function keepWithCustomApps(element) {
+		const nav = document.querySelector("#global-nav-bar") || document.body;
+		let queued = false;
+		const place = () => {
+			queued = false;
+			const row = document.querySelector(".custom-navlinks-scrollable_container .spicetify-sc-scroller > div");
+			if (row && element.parentElement !== row) row.append(element);
+			// Same size and glass as the links beside it there; Spicetify's own compact look elsewhere
+			const button = element.querySelector("button");
+			const inRow = element.parentElement === row;
+			if (!button) return;
+			for (const name of ["main-globalNav-navLink", "main-globalNav-link-icon", "custom-navlink", "link-subtle"]) button.classList.toggle(name, inRow);
+			if (inRow) for (const name of [...button.classList]) if (name.endsWith("button-tertiary--condensed")) button.classList.remove(name);
+		};
+		new MutationObserver(() => {
+			if (!queued) {
+				queued = true;
+				requestAnimationFrame(place);
+			}
+		}).observe(nav, { childList: true, subtree: true });
+		place();
+	}
+
 	function registerSettingsMenu() {
 		const { Menu, Topbar } = Spicetify;
-		if (Topbar?.Button) new Topbar.Button("LiquidMusic settings", SETTINGS_ICON, () => safe(openSettings), false, false);
+		if (Topbar?.Button) {
+			const button = new Topbar.Button("LiquidMusic settings", SETTINGS_ICON, () => safe(openSettings), false, false);
+			safe(() => keepWithCustomApps(button.element));
+		}
 		if (Menu?.Item) new Menu.Item("LiquidMusic", false, () => safe(openSettings)).register();
 		else if (!Topbar?.Button) warn("Spicetify.Menu and Topbar missing, the settings can't be opened");
 	}
