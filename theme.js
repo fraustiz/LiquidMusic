@@ -1259,10 +1259,48 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 	// slides to the chosen option on a spring, opening up (12% wider, 35% taller) and clearing while it travels or is
 	// pressed, and can be dragged from one option to the next. It sits above the labels, and its rim refracts the one
 	// it passes over (liquidLensOffset, no frost so the text stays sharp). Reduced motion: it jumps.
+	// A refraction-only SVG filter for a small moving lens (liquidLensOffset, pulling `amount` of its half-height at the
+	// rim), drawn once for its resting size: its motion is a transform. No frost, so what it bends stays sharp.
+	// Null without SVG backdrop filters or with solid surfaces.
+	let refractionSerial = 0;
+	function refractionFilter(width, height, radius, amount) {
+		if (!CSS.supports("backdrop-filter", 'url("#lm-optics-probe")') || matchMedia(SOLID_SURFACES_QUERY).matches) return null;
+		const canvas = document.createElement("canvas");
+		canvas.width = Math.max(1, Math.round(width));
+		canvas.height = Math.max(1, Math.round(height));
+		const ctx = canvas.getContext("2d");
+		if (!ctx) return null;
+		const map = ctx.createImageData(canvas.width, canvas.height);
+		const strength = (Math.min(width, height) / 2) * amount;
+		const offsets = [];
+		let max = 0;
+		for (let py = 0; py < canvas.height; py++) {
+			for (let px = 0; px < canvas.width; px++) {
+				const o = liquidLensOffset(px + 0.5, py + 0.5, width, height, radius, strength);
+				offsets.push(o.x, o.y);
+				max = Math.max(max, Math.abs(o.x), Math.abs(o.y));
+			}
+		}
+		const scale = Math.max(max * 2, 1);
+		for (let n = 0; n < offsets.length / 2; n++) {
+			map.data[n * 4] = Math.round((offsets[n * 2] / scale + 0.5) * 255);
+			map.data[n * 4 + 1] = Math.round((offsets[n * 2 + 1] / scale + 0.5) * 255);
+			map.data[n * 4 + 2] = 128;
+			map.data[n * 4 + 3] = 255;
+		}
+		ctx.putImageData(map, 0, 0);
+		const id = `lm-refraction-${++refractionSerial}`;
+		const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+		svg.setAttribute("width", "0");
+		svg.setAttribute("height", "0");
+		svg.setAttribute("aria-hidden", "true");
+		svg.style.cssText = "position:absolute;pointer-events:none";
+		svg.innerHTML = `<filter id="${id}" x="0" y="0" width="${width}" height="${height}" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feImage href="${canvas.toDataURL()}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="lens"/><feDisplacementMap in="SourceGraphic" in2="lens" scale="${scale}" xChannelSelector="R" yChannelSelector="G"/></filter>`;
+		return { svg, id };
+	}
+
 	const LENS_SPRINGS = { slide: { omega: 14, zeta: 0.75 }, drag: { omega: 40, zeta: 0.999 } };
-	let segmentedLensSerial = 0;
 	function segmentedLens(group, buttons, choose) {
-		const ns = "http://www.w3.org/2000/svg";
 		// Two layers move together: the fill and shadow under the labels, the glass (rim, refraction) over them
 		const fill = document.createElement("span");
 		fill.className = "lm-segmented-lens lm-segmented-lens-fill";
@@ -1288,40 +1326,11 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 
 		// The refraction map is drawn once for the lens's resting size; its motion is a transform
 		function optics(width, height) {
-			if (!CSS.supports("backdrop-filter", 'url("#lm-optics-probe")') || matchMedia(SOLID_SURFACES_QUERY).matches) return;
-			const canvas = document.createElement("canvas");
-			canvas.width = Math.max(1, Math.round(width));
-			canvas.height = Math.max(1, Math.round(height));
-			const ctx = canvas.getContext("2d");
-			if (!ctx) return;
-			const map = ctx.createImageData(canvas.width, canvas.height);
-			const strength = Math.min(width, height) / 2 * 0.5;
-			const offsets = [];
-			let max = 0;
-			for (let py = 0; py < canvas.height; py++) {
-				for (let px = 0; px < canvas.width; px++) {
-					const o = liquidLensOffset(px + 0.5, py + 0.5, width, height, height / 2, strength);
-					offsets.push(o.x, o.y);
-					max = Math.max(max, Math.abs(o.x), Math.abs(o.y));
-				}
-			}
-			const scale = Math.max(max * 2, 1);
-			for (let n = 0; n < offsets.length / 2; n++) {
-				map.data[n * 4] = Math.round((offsets[n * 2] / scale + 0.5) * 255);
-				map.data[n * 4 + 1] = Math.round((offsets[n * 2 + 1] / scale + 0.5) * 255);
-				map.data[n * 4 + 2] = 128;
-				map.data[n * 4 + 3] = 255;
-			}
-			ctx.putImageData(map, 0, 0);
-			const id = `lm-segmented-lens-${++segmentedLensSerial}`;
-			const svg = document.createElementNS(ns, "svg");
-			svg.setAttribute("width", "0");
-			svg.setAttribute("height", "0");
-			svg.style.cssText = "position:absolute;pointer-events:none";
-			svg.innerHTML = `<filter id="${id}" x="0" y="0" width="${width}" height="${height}" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feImage href="${canvas.toDataURL()}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="lens"/><feDisplacementMap in="SourceGraphic" in2="lens" scale="${scale}" xChannelSelector="R" yChannelSelector="G"/></filter>`;
+			const filter = refractionFilter(width, height, height / 2, 0.5);
+			if (!filter) return;
 			group.querySelector("svg")?.remove();
-			group.append(svg);
-			lens.style.backdropFilter = `url("#${id}")`;
+			group.append(filter.svg);
+			lens.style.backdropFilter = `url("#${filter.id}")`;
 		}
 
 		function render() {
@@ -1775,6 +1784,53 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 		document.addEventListener("pointercancel", release, true);
 	}
 
+	// The volume slider's knob, in Liquid Glass, is a small pill of glass whose rim bends the track under it; held, it
+	// opens into a wider, clearer lens on a spring, as in bilalgursen/liquid-glass's RangeSlider (MIT; theirs is
+	// WebGL). user.css draws it; this adds the refraction and the motion. Reduced motion: no opening.
+	const KNOB_SELECTOR = ".main-nowPlayingBar-volumeBar [data-testid='progress-bar']";
+	function startGlassKnob() {
+		const motion = matchMedia(MOTION_QUERY);
+		const filter = refractionFilter(24, 16, 8, 0.5);
+		if (filter) {
+			document.body.append(filter.svg);
+			root.style.setProperty("--lm-knob-optics", `url("#${filter.id}")`);
+		}
+		const open = { x: 0, v: 0 };
+		let held = false;
+		let frame = 0;
+		let last = 0;
+		function tick(now) {
+			frame = 0;
+			const dt = last ? Math.min((now - last) / 1000, 1 / 20) : 1 / 60;
+			last = now;
+			const on = held && root.dataset.lmPanels === "liquid" && !motion.matches;
+			const moving = stepSpring(open, on ? 1 : 0, SWELL_SPRINGS.press, dt);
+			const knob = document.querySelector(`${KNOB_SELECTOR} .progress-bar__slider`);
+			if (knob) {
+				const p = Math.max(open.x, -0.12);
+				knob.style.scale = open.x ? `${(1 + 0.6 * p).toFixed(4)} ${(1 + 0.5 * p).toFixed(4)}` : "";
+				knob.style.setProperty("--lm-knob-open", Math.min(Math.max(open.x, 0), 1).toFixed(3));
+			}
+			if (moving || held) frame = requestAnimationFrame(tick);
+			else last = 0;
+		}
+		const kick = () => {
+			if (!frame) frame = requestAnimationFrame(tick);
+		};
+		document.addEventListener("pointerdown", (event) => {
+			if (event.button !== 0 || !event.target.closest?.(KNOB_SELECTOR)) return;
+			held = true;
+			kick();
+		}, true);
+		const release = () => {
+			if (!held) return;
+			held = false;
+			kick();
+		};
+		document.addEventListener("pointerup", release, true);
+		document.addEventListener("pointercancel", release, true);
+	}
+
 	// An optical layer on floating controls, never a filter on their foreground. The displacement map is
 	// neutral in the centre and magnifies the backdrop along the rounded edge (liquidLensOffset). The body keeps
 	// the mobile material's 3px frost; the rim stays sharp so the frost doesn't erase the lens.
@@ -1905,6 +1961,7 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 		backdrop();
 		safe(startGlassOptics);
 		safe(startGlassSwell);
+		safe(startGlassKnob);
 		applyMode();
 		matchMedia(LIGHT_QUERY).addEventListener("change", () => safe(applyMode));
 		matchMedia(SOLID_SURFACES_QUERY).addEventListener("change", () => safe(applyAccent));

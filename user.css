@@ -2268,3 +2268,21 @@ html[data-cinema-npv-postEnter][data-lm-lyrics-view]:not([data-right-sidebar-ope
 		animation: none;
 	}
 }
+
+/* Liquid Glass: the volume slider's knob is a small pill of glass whose rim bends the track under it; held, theme.js
+   opens it into a wider, clearer lens (startGlassKnob, after bilalgursen/liquid-glass's RangeSlider) */
+@media (prefers-reduced-transparency: no-preference) and (prefers-contrast: no-preference) {
+	:root[data-lm-panels="liquid"] .main-nowPlayingBar-volumeBar .progress-bar__slider {
+		--lm-knob-open: 0;
+		width: 24px;
+		height: 16px;
+		margin-left: -12px;
+		border-radius: 999px;
+		background: rgba(255, 255, 255, calc(0.3 - 0.22 * var(--lm-knob-open)));
+		backdrop-filter: var(--lm-knob-optics, blur(1px)) saturate(160%);
+		box-shadow:
+			inset 0 0 0 1px rgba(255, 255, 255, calc(0.45 + 0.35 * var(--lm-knob-open))),
+			inset 0 1px 1px rgba(255, 255, 255, 0.5),
+			0 calc(2px + 4px * var(--lm-knob-open)) calc(6px + 10px * var(--lm-knob-open)) rgba(0, 0, 0, 0.3);
+	}
+}
