@@ -641,15 +641,31 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 		return hooks.map(([name]) => name).filter((name) => !isPresent(name));
 	}
 
-	// Android LiquidMusic's Frost.LENS: strongest at the rim, fading inward without the old sine's fold.
-	// Keep the pull below half the band so the sampled content compresses smoothly instead of mirroring.
-	function liquidLensBend(depth, band) {
-		const edge = band > 0 && depth > 0 && depth < band ? 1 - depth / band : 0;
-		return edge * edge;
+	// The lens profile of bilalgursen/liquid-glass (refractionMap.ts, MIT, https://github.com/bilalgursen/liquid-glass):
+	// the backdrop is pulled inward, strongest right at the rim (ratio⁸) and anti-aliased over the edge's last pixels,
+	// so it reads as a magnifying drop of glass. Pulled along the edge's normal rather than from the centre: across the
+	// wide player the centre's direction ran along its long sides. Returns the offset in px and the rim's weight (0-1).
+	function liquidLensOffset(px, py, width, height, radius, strength) {
+		const hx = width / 2;
+		const hy = height / 2;
+		const cx = px - hx;
+		const cy = py - hy;
+		const qx = Math.abs(cx) - (hx - radius);
+		const qy = Math.abs(cy) - (hy - radius);
+		const d = Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - radius;
+		const ratio = Math.min(Math.max(1 - Math.abs(d) / Math.min(hx, hy), 0), 1);
+		const t = Math.min(Math.max((d - 1.5) / -2, 0), 1);
+		const weight = ratio ** 8 * t * t * (3 - 2 * t);
+		const gx = Math.max(qx, 0) * Math.sign(cx);
+		const gy = Math.max(qy, 0) * Math.sign(cy);
+		const g = Math.hypot(gx, gy);
+		const ux = g ? gx / g : qx > qy ? Math.sign(cx) : 0;
+		const uy = g ? gy / g : qx > qy ? 0 : Math.sign(cy);
+		return { x: -ux * strength * weight, y: -uy * strength * weight, weight };
 	}
 
 	const helpers = {
-		liquidLensBend,
+		liquidLensOffset,
 		PILL_HOOKS,
 		CLASS_HOOKS,
 		NPV_ROOT_HOOKS,
@@ -1490,11 +1506,10 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 	}
 
 	// An optical layer on floating controls, never a filter on their foreground. The displacement map is
-	// neutral in the centre and bends the backdrop along a rounded edge. Keep the mobile material's 3px
-	// frost in the body, but reveal a sharper refracted rim so that the frost doesn't erase the lens.
-	// Uses morphe-patches-liquidmusic's LiquidMusic.java: Frost.LENS, with a wider band for desktop.
-	// Rebuild only on size changes;
-	// a bounded bitmap keeps a wide player inexpensive. Chromium supports SVG backdrop filters.
+	// neutral in the centre and magnifies the backdrop along the rounded edge (liquidLensOffset). The body keeps
+	// the mobile material's 3px frost; the rim stays sharp so the frost doesn't erase the lens.
+	// Rebuild only on size changes; a bounded bitmap keeps a wide player inexpensive. Chromium supports SVG
+	// backdrop filters.
 	function startGlassOptics() {
 		if (!CSS.supports("backdrop-filter", 'url("#lm-optics-probe")')) return;
 		const selector = ".main-globalNav-historyButtons, .main-globalNav-link-icon, .custom-navlinks-scrollable_container, .main-globalNav-searchInputContainer, .main-globalNav-contentRight > .main-actionButtons:not(.main-globalNav-contentRight), .main-globalNav-contentRight .spicetify-topbar-button, [data-testid='user-widget-link'], .main-nowPlayingBar-container";
@@ -1531,33 +1546,39 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 			const ctx = canvas.getContext("2d");
 			if (!ctx) return;
 			const map = ctx.createImageData(canvas.width, canvas.height);
-			const band = Math.min(24, radius * 0.85);
-			const strength = band * 0.45;
-			const margin = Math.ceil(Math.max(3 * 3, strength + 2));
+			// Pull up to 40% of the shape's half-height at the rim
+			const strength = Math.min(width, height) / 2 * 0.4;
+			const count = canvas.width * canvas.height;
+			const offsets = new Float32Array(count * 2);
+			const masks = new Float32Array(count);
+			let max = 0;
 			for (let y = 0; y < canvas.height; y++) {
 				for (let x = 0; x < canvas.width; x++) {
-					const px = (x + 0.5) * width / canvas.width;
-					const py = (y + 0.5) * height / canvas.height;
-					const dx = px - Math.max(radius, Math.min(width - radius, px));
-					const dy = py - Math.max(radius, Math.min(height - radius, py));
-					const length = Math.hypot(dx, dy);
-					const depth = radius - length;
-					const bend = liquidLensBend(depth, band);
-					const i = (y * canvas.width + x) * 4;
-					map.data[i] = Math.round(127.5 + (length ? dx / length : 0) * bend * 127.5);
-					map.data[i + 1] = Math.round(127.5 + (length ? dy / length : 0) * bend * 127.5);
-					// The unused blue channel is the blend mask: clear refracted rim, lightly frosted centre.
-					map.data[i + 2] = Math.round(Math.sqrt(bend) * 255);
-					map.data[i + 3] = 255;
+					const n = y * canvas.width + x;
+					const lens = liquidLensOffset((x + 0.5) * width / canvas.width, (y + 0.5) * height / canvas.height, width, height, radius, strength);
+					offsets[n * 2] = lens.x;
+					offsets[n * 2 + 1] = lens.y;
+					masks[n] = Math.sqrt(lens.weight);
+					max = Math.max(max, Math.abs(lens.x), Math.abs(lens.y));
 				}
 			}
+			// The map spends its 256 levels on the largest offset it actually holds
+			const scale = Math.max(max * 2, 1);
+			for (let n = 0; n < count; n++) {
+				map.data[n * 4] = Math.round((offsets[n * 2] / scale + 0.5) * 255);
+				map.data[n * 4 + 1] = Math.round((offsets[n * 2 + 1] / scale + 0.5) * 255);
+				// The unused blue channel is the blend mask: clear refracted rim, lightly frosted centre.
+				map.data[n * 4 + 2] = Math.round(masks[n] * 255);
+				map.data[n * 4 + 3] = 255;
+			}
+			const margin = Math.ceil(Math.max(3 * 3, max + 2));
 			ctx.putImageData(map, 0, 0);
 			// Both the blur and the lens sample beyond the rim; leave room so their output isn't cut off there.
 			entry.filter.setAttribute("x", -margin);
 			entry.filter.setAttribute("y", -margin);
 			entry.filter.setAttribute("width", width + margin * 2);
 			entry.filter.setAttribute("height", height + margin * 2);
-			entry.displacement.setAttribute("scale", strength * 2);
+			entry.displacement.setAttribute("scale", scale);
 			entry.image.setAttribute("width", width);
 			entry.image.setAttribute("height", height);
 			entry.image.setAttribute("href", canvas.toDataURL());
