@@ -24,7 +24,11 @@ player, and an accent colour taken from whatever is playing.
     [Kawarp](https://github.com/better-lyrics/kawarp) draws the artwork with WebGL, Kawase blur and domain warping,
     the same fluid look as Spicy Lyrics. Animated, it follows the song's tempo, loudness and beats; it calms down
     when paused or under reduced motion and stops when the window is hidden. Without WebGL it falls back to artwork.
-  - **Reset theme settings** restores the Spicetify appearance, frosted glass and blurred artwork.
+  - **Player layout**: *Controls left, track centre* (default) or *Track left, controls centre*, Spotify's own order
+    with the playback controls in the middle of the player.
+  - **Player width**: *Pill* (default) or *Full width*, a player across the whole window with more room for the
+    title and artists.
+  - **Reset theme settings** restores the Spicetify appearance, frosted glass, blurred artwork and the pill player.
   Existing surface and background selections are preserved; Liquid Glass is opt-in.
 - **Colour from the artwork.** The accent (buttons, progress bar, highlights, links) is picked from the album cover
   and adjusted until it reads at 4.5:1 or better on the theme's surfaces. Panels thicken on busy covers so

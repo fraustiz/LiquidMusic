@@ -1005,6 +1005,18 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 		["liquid", "Liquid Glass"],
 		["clear", "Clear, like Spicy Lyrics"],
 	];
+	// The player: controls at the left and the track in the middle (default), or Spotify's order (issue #10); a pill
+	// or the window's whole width (issue #12)
+	const PLAYER_LAYOUT_KEY = "lm-player-layout";
+	const PLAYER_LAYOUTS = [
+		["controls-left", "Controls left, track centre"],
+		["controls-centre", "Track left, controls centre"],
+	];
+	const PLAYER_WIDTH_KEY = "lm-player-width";
+	const PLAYER_WIDTHS = [
+		["pill", "Pill"],
+		["full", "Full width"],
+	];
 	const BG_SCALE = 0.5; // the effect is a blur: half the pixels look the same and cost a quarter
 	const BG_FPS = 60; // the render loop's cap
 	const PAUSED_SPEED = 0.1;
@@ -1035,6 +1047,14 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 	const appearanceMode = () => storedChoice(APPEARANCE_KEY, APPEARANCE_MODES);
 	const backgroundMode = () => storedChoice(BG_KEY, BG_MODES);
 	const panelsMode = () => storedChoice(PANELS_KEY, PANEL_MODES);
+	const playerLayout = () => storedChoice(PLAYER_LAYOUT_KEY, PLAYER_LAYOUTS);
+	const playerWidth = () => storedChoice(PLAYER_WIDTH_KEY, PLAYER_WIDTHS);
+
+	// The player's layout and width live on <html> for user.css
+	function applyPlayerMode() {
+		root.dataset.lmPlayerLayout = playerLayout();
+		root.dataset.lmPlayerWidth = playerWidth();
+	}
 
 	// The panels' look lives on <html> for user.css; the accent is measured against what they now show
 	function applyPanelsMode() {
@@ -1210,9 +1230,20 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 		});
 		const surfaces = group("Surfaces", PANEL_MODES, panelsMode, setPanelsMode);
 		const background = group("Background", BG_MODES, backgroundMode, setBackgroundMode);
+		const layout = group("Player layout", PLAYER_LAYOUTS, playerLayout, (mode) => {
+			store(PLAYER_LAYOUT_KEY, mode);
+			applyPlayerMode();
+		});
+		const width = group("Player width", PLAYER_WIDTHS, playerWidth, (mode) => {
+			store(PLAYER_WIDTH_KEY, mode);
+			applyPlayerMode();
+		});
 		const reset = new Menu.Item("Reset theme settings", false, () => {
 			store(APPEARANCE_KEY, "default");
 			store(PANELS_KEY, "glass");
+			store(PLAYER_LAYOUT_KEY, PLAYER_LAYOUTS[0][0]);
+			store(PLAYER_WIDTH_KEY, PLAYER_WIDTHS[0][0]);
+			applyPlayerMode();
 			setBackgroundMode("classic");
 			applyPanelsMode();
 			applyMode();
@@ -1220,7 +1251,7 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 		});
 		refreshSettingsMenu = () => groups.forEach((refresh) => refresh());
 		refreshSettingsMenu();
-		new Menu.SubMenu("LiquidMusic", [appearance, surfaces, background, reset]).register();
+		new Menu.SubMenu("LiquidMusic", [appearance, surfaces, background, layout, width, reset]).register();
 	}
 
 	// ---- Loading the artwork into Kawarp
@@ -1487,6 +1518,7 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 		matchMedia(SOLID_SURFACES_QUERY).addEventListener("change", () => safe(applyAccent));
 		watchMarketplaceScheme();
 		applyPanelsMode();
+		applyPlayerMode();
 		safe(registerSettingsMenu);
 		safe(watchLyricsViews);
 		safe(keepIvLyricsMenusAbovePill);

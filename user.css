@@ -615,6 +615,36 @@ html.spotify__os--is-macos .main-globalNav-historyButtonsWrapper > * > :first-ch
 	/* side padding follows the capsule's curve (radius 38px) so nothing sits in the rounded ends */
 	padding: 7px 26px;
 }
+/* Settings (theme.js): "Player width: Full width" spans the window (issue #12), and "Player layout: Track left,
+   controls centre" takes Spotify's order, the controls centred between two equal columns (issue #10). Across a
+   wide window the LCD keeps a readable width instead of stretching */
+html[data-lm-player-width="full"] .Root__now-playing-bar {
+	width: calc(100% - 32px);
+}
+html[data-lm-player-width="full"] .main-nowPlayingBar-nowPlayingBar {
+	grid-template-columns: minmax(max-content, 1fr) minmax(0, 720px) minmax(max-content, 1fr);
+}
+html[data-lm-player-width="full"] .player-controls__buttons {
+	justify-self: start;
+}
+html[data-lm-player-layout="controls-centre"] .main-nowPlayingBar-nowPlayingBar {
+	grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+	grid-template-areas:
+		"lcd      controls extra"
+		"progress progress progress";
+}
+html[data-lm-player-layout="controls-centre"] .player-controls__buttons {
+	justify-self: center;
+}
+:is(html[data-lm-player-width="full"], html[data-lm-player-layout="controls-centre"]) .main-nowPlayingBar-right {
+	justify-self: end;
+}
+html[data-lm-player-width="full"][data-lm-player-layout="controls-centre"] .main-nowPlayingBar-left,
+html[data-lm-player-width="full"][data-lm-player-layout="controls-centre"] .main-nowPlayingBar-nowPlayingBar::after {
+	justify-self: start;
+	width: 100% !important;
+	max-width: 480px;
+}
 /* Spotify paints a cover-tinted gradient (8px corners) on the bar and on its ::before layers: the glass replaces it */
 .main-nowPlayingBar-container,
 .main-nowPlayingBar-nowPlayingBar {
@@ -889,6 +919,11 @@ html[data-cinema-npv-postEnter] [style*="--cinema-mode-bg-color-from"]::after {
 	bottom: 40px;
 	font-size: 14px;
 	color: var(--text-subdued);
+}
+/* A full-width player covers that corner, and its LCD already shows them */
+html[data-lm-player-width="full"][data-cinema-npv-postEnter] [style*="--cinema-mode-bg-color-from"]::before,
+html[data-lm-player-width="full"][data-cinema-npv-postEnter] [style*="--cinema-mode-bg-color-from"]::after {
+	content: none;
 }
 /* When the mouse rests Spotify hides its player and writes the title and artists there itself (its only text in
    the first screen), fading them in after 1s. Ours sit in the same place with the same type and fade out on the
