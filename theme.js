@@ -1320,7 +1320,7 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 
 	function registerSettingsMenu() {
 		const { Menu, Topbar } = Spicetify;
-		if (Topbar?.Button) new Topbar.Button("LiquidMusic settings", SETTINGS_ICON, () => safe(openSettings), false, true);
+		if (Topbar?.Button) new Topbar.Button("LiquidMusic settings", SETTINGS_ICON, () => safe(openSettings), false, false);
 		if (Menu?.Item) new Menu.Item("LiquidMusic", false, () => safe(openSettings)).register();
 		else if (!Topbar?.Button) warn("Spicetify.Menu and Topbar missing, the settings can't be opened");
 	}
