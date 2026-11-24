@@ -1725,6 +1725,16 @@ html[data-lm-page="lyrics"] .Root__main-view,
 	--lyrics-color-messaging: var(--lm-label-2) !important;
 	background: transparent !important;
 }
+/* ivLyrics (custom app): its sync offset bar (−100ms … +100ms) sits 16px above the bottom of the page, under the floating pill */
+.lyrics-lyricsContainer-LyricsContainer:not(.fullscreen-active) .lyrics-quick-sync-stack {
+	bottom: calc(var(--lm-pill-h) + 16px + 12px);
+}
+/* So does its toolbar, and the menus it opens (Current track, More…) end at its bottom edge: their last rows went
+   under the pill. The toolbar starts above it; ivLyrics sizes it from the same gap */
+.lyrics-lyricsContainer-LyricsContainer:not(.fullscreen-active) .lyrics-config-button-container {
+	--iv-floating-toolbar-bottom-gap: calc(var(--lm-pill-h) + 16px + 12px);
+	bottom: var(--iv-floating-toolbar-bottom-gap) !important;
+}
 /* The data-lm-* marks below are set by theme.js (markLyricsViews): an inline-style test inside :has() made Chrome
    restyle the whole page whenever any element's style changed (issue #8).
    On some accounts (a Spotify experiment) the expanded Now Playing view shows the lyrics too. Without their flat

@@ -806,6 +806,38 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 		safe(markLyricsViews);
 	}
 
+	// ivLyrics (custom app) opens its toolbar's menus (Current track, More…) beside the button that opened them and
+	// keeps them inside its page, which runs on under the floating pill: a menu opened from a low button ended under
+	// it. user.css lifts the toolbar above the pill; a menu still too low moves up just enough, within the page.
+	// ivLyrics places the menu when it opens or changes view (both after a click in the toolbar) and on resize;
+	// it measures over a few frames, so the check follows for a few frames too.
+	function keepIvLyricsMenusAbovePill() {
+		const GAP = 12;
+		const check = () => {
+			const fly = document.querySelector(".lyrics-lyricsContainer-LyricsContainer:not(.fullscreen-active) .ivl-tb-fly");
+			const pill = document.querySelector(".Root__now-playing-bar");
+			if (!fly || !pill) return;
+			const box = fly.getBoundingClientRect();
+			const bar = pill.getBoundingClientRect();
+			const overlap = box.bottom - (bar.top - GAP);
+			if (overlap <= 0 || box.right <= bar.left || box.left >= bar.right) return;
+			const page = fly.closest(".lyrics-lyricsContainer-LyricsContainer").getBoundingClientRect();
+			const shift = Math.min(overlap, box.top - (page.top + GAP));
+			if (shift > 0) fly.style.top = Math.round(parseFloat(getComputedStyle(fly).top) - shift) + "px";
+		};
+		let frames = 0;
+		const follow = () => {
+			safe(check);
+			if (--frames > 0) requestAnimationFrame(follow);
+		};
+		const start = () => {
+			if (frames <= 0) requestAnimationFrame(follow);
+			frames = 6;
+		};
+		document.addEventListener("click", (event) => event.target.closest?.(".ivl-tb") && start(), true);
+		window.addEventListener("resize", start);
+	}
+
 	// Marks a track list's column header while it is stuck under the page's sticky bar: user.css then draws one
 	// glass layer behind the two (see .main-trackList-trackListHeader). CSS can't tell the bar that the header is
 	// stuck, and Spotify's own mark, a class, comes late on a fast scroll: the header's background lingered after
@@ -1401,10 +1433,15 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 					filter.append(
 						image,
 						create("feGaussianBlur", { in: "SourceGraphic", stdDeviation: "3", result: "soft" }),
-						create("feDisplacementMap", { in: "soft", in2: "lens", scale: "18", xChannelSelector: "R", yChannelSelector: "G" }),
+						create("feGaussianBlur", { in: "SourceGraphic", stdDeviation: "0.6", result: "rimSource" }),
+						displacement,
+						create("feColorMatrix", { in: "lens", type: "matrix", values: "0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 1 0 0", result: "rimMask" }),
+						create("feComposite", { in: "refracted", in2: "rimMask", operator: "in", result: "rim" }),
+						create("feComposite", { in: "soft", in2: "rimMask", operator: "out", result: "body" }),
+						create("feComposite", { in: "rim", in2: "body", operator: "arithmetic", k1: "0", k2: "1", k3: "1", k4: "0" }),
 					);
 					defs.append(filter);
-					entries.set(el, { filter, image, key: null });
+					entries.set(el, { filter, image, displacement, key: null });
 					resize.observe(el);
 				}
 				update(el, entries.get(el));
