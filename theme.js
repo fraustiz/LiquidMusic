@@ -553,10 +553,13 @@ ${i}`:i),t.compileShader(r),!t.getShaderParameter(r,t.COMPILE_STATUS)){const s=t
 		// Cards (home, search, artist pages…); artist and profile pictures are round
 		["main-card-cardContainer", "[data-encore-id='card']"],
 		["main-card-imageContainer", "[data-encore-id='card'] > :has(img)"],
-		["main-cardImage-imageWrapper", ".main-card-imageContainer > :first-child"],
+		// Not Spotify 1.3.10's stacked covers (recently updated playlists): the wrapper's square padding left them no height
+		["main-cardImage-imageWrapper", ".main-card-imageContainer > :first-child:not(:has(> :nth-child(2) img))"],
 		["main-cardImage-image", ".main-cardImage-imageWrapper img"],
 		["main-cardImage-circular", "[data-encore-id='card']:has(> :is([aria-labelledby*=':artist:'], [aria-labelledby*=':user:'])) :is(.main-cardImage-imageWrapper, .main-cardImage-image)"],
-		["main-card-PlayButtonContainer", ".main-card-imageContainer > :has([data-encore-id='buttonPrimary'])"],
+		// The Library's default grid nests the play button inside the image wrapper: naming that wrapper hid the artwork
+		// with the button (issue #11)
+		["main-card-PlayButtonContainer", ".main-card-imageContainer > :has([data-encore-id='buttonPrimary']):not(:has(img))"],
 		["main-card-cardTitle", "[data-encore-id='cardTitle']"],
 		// Expanded / full-screen Now Playing: the only scroll host right under the root grid
 		["main-actionBar-ActionBarContainer", ".Root__top-container > * > [data-overlayscrollbars]"],
